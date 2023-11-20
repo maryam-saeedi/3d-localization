@@ -11,7 +11,7 @@ from convert_2d_to_3d import *
 from combine import combine
 from utils import *
 import pickle
-
+import re
 
 tetha = (0,0,0)
 tetha_x = 0
@@ -184,13 +184,13 @@ class App:
         return projected_2d, rotation_matrix
 
     def __change_width(self):
-        self.cube_width = int(self.width_inp.text)
+        self.cube_width = int(re.search(r'\d+', self.width_inp.text).group())
 
     def __change_height(self):
-        self.cube_height = int(self.height_inp.text)
+        self.cube_height = int(re.search(r'\d+', self.height_inp.text).group())
 
     def __change_depth(self):
-        self.cube_depth = int(self.depth_inp.text)
+        self.cube_depth = int(re.search(r'\d+', self.depth_inp.text).group())
 
     def __set_camera_name(self, cam):
         self.camera_config_list[cam]["name"] = getattr(self,f"name_inp_{cam}").text
@@ -232,7 +232,7 @@ class App:
         self.camera_config_list[cam]["wall"] = 4
 
     def __set_camera_width(self, cam):
-        camera_width = int(getattr(self,f"camera_width_inp_{cam}").text)
+        camera_width = int(re.search(r'\d+',  getattr(self,f"camera_width_inp_{cam}").text).group())
         if self.selected_wall ==1 :
             self.camera_pos[cam] = (camera_width-(self.cube_width//2), self.camera_pos[cam][1], self.camera_pos[cam][2])
         elif self.selected_wall==2:
@@ -243,7 +243,7 @@ class App:
             self.camera_pos[cam] = ((self.cube_width//2)-camera_width, self.camera_pos[cam][1], self.camera_pos[cam][2])
         
     def __set_camera_height(self, cam):
-        camera_height = int(getattr(self,f"camera_height_inp_{cam}").text)
+        camera_height = int(re.search(r'\d+',  getattr(self,f"camera_height_inp_{cam}").text).group())
         self.camera_pos[cam] = (self.camera_pos[cam][0], (self.cube_height//2) - camera_height, self.camera_pos[cam][2])
 
     def __add_camera(self):
@@ -334,15 +334,15 @@ class App:
         _, self.frame2 = self.cap2.read()
 
     def __set_pos_w(self):
-        self.pos_w = int(self.pos_w_inp.text)
+        self.pos_w = int(re.search(r'\d+', self.pos_w_inp.text).group())
         self.pos_w = self.pos_w - self.camera_config_list[1]['world_pos'][0]
     
     def __set_pos_h(self):
-        self.pos_h = int(self.pos_h_inp.text)
+        self.pos_h = int(re.search(r'\d+', self.pos_h_inp.text).group())
         self.pos_h = self.pos_h - self.camera_config_list[1]['world_pos'][1]
 
     def __set_pos_d(self):
-        self.pos_d = int(self.pos_d_inp.text)
+        self.pos_d = int(re.search(r'\d+', self.pos_d_inp.text).group())
         self.pos_d = self.pos_d - self.camera_config_list[1]['world_pos'][2]
 
     def __next(self):
@@ -352,6 +352,7 @@ class App:
     def __reset_positions(self):
         self.positions1 = []
         self.positions2 = []
+        self.real_pos = []
         self.pos_i = 0
 
     def __done(self):
@@ -564,49 +565,41 @@ class App:
                 self.select_btn.draw(screen)
 
             elif self.step==4:
-                # img1 = cv2.imread(f"3_points/camera_{self.primary_cam}.jpg")
-                # img2 = cv2.imread(f"3_points/camera_{self.secondary_cam}.jpg")
-                img1 = self.frame1
-                img2 = self.frame2
-                if len(self.positions1) < 3:
-                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
-                    screen.blit(pygame.image.frombuffer(img1.tobytes(), (img1.shape[1],img1.shape[0]), "RGB"), (0,0))
-                    for event in self.events:
-                        if event.type == pygame.MOUSEBUTTONDOWN:
-                            self.positions1.append(event.pos)
-                    self.get_point_lbl.text = f"point {len(self.positions1)+1} out of 3 \n in camera {self.camera_config_list[1]['name']} \n for video {self.cap1.getBackendName}"
-                    self.get_point_lbl.draw(screen)
-                elif len(self.positions2) < 3:
-                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
-                    screen.blit(pygame.image.frombuffer(img2.tobytes(), (img2.shape[1],img2.shape[0]), "RGB"), (0,0))
-                    for event in self.events:
-                        if event.type == pygame.MOUSEBUTTONDOWN:
-                            self.positions2.append(event.pos)
-                    self.get_point_lbl.text = f"point {len(self.positions2)+1} out of 3 \n in camera {self.camera_config_list[2]['name']} \n for video {self.cap1.getBackendName}"
-                    self.get_point_lbl.draw(screen)
-                else:
-                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                img1_ = self.frame1.copy()
+                img2_ = self.frame2.copy()
+                for pos1 in self.positions1[:self.pos_i]:
+                    cv2.circle(img1_, np.uint16(pos1), 10, (0,255,0), -1)
+                if len(self.positions1)==self.pos_i+1: cv2.circle(img1_, np.uint16(self.positions1[self.pos_i]), 10, (255,0,0), -1)
+                for pos2 in self.positions2[:self.pos_i]:
+                    cv2.circle(img2_, np.uint16(pos2), 10, (0,255,0), -1)
+                if len(self.positions2)==self.pos_i+1: cv2.circle(img2_, np.uint16(self.positions2[self.pos_i]), 10, (255,0,0), -1)
+                r = img1_.shape[0]/img1_.shape[1]
+                w = 2*screen.get_width()//5
+                h = w*r
 
-                    pos1 = self.positions1[self.pos_i] 
-                    pos2 = self.positions2[self.pos_i]
-                    # img1_ = img1.copy()
-                    # img2_ = img2.copy()
-                    img1_ = self.frame1.copy()
-                    img2_ = self.frame2.copy()
-                    cv2.circle(img1_, pos1, 10, (0,255,0), -1)
-                    cv2.circle(img2_, pos2, 10, (0,255,0), -1)
-                    r = img1_.shape[0]/img1_.shape[1]
-                    w = 2*screen.get_width()//5
-                    h = w*r
-                    img1_ = cv2.resize(img1_, (int(w), int(h)))
-                    img2_ = cv2.resize(img2_, (int(w), int(h)))
-                    self.img1_lbl.text = f"View of Camera {self.camera_config_list[1]['name']}"
-                    self.img2_lbl.text = f"View of Camera {self.camera_config_list[2]['name']}"
-                    self.img1_lbl.draw(screen)
-                    self.img2_lbl.draw(screen)
-                    screen.blit(pygame.image.frombuffer(img1_.tobytes(), (img1_.shape[1],img1_.shape[0]), "RGB"), (int(w/6),50))
-                    screen.blit(pygame.image.frombuffer(img2_.tobytes(), (img2_.shape[1],img2_.shape[0]), "RGB"), (screen.get_width()-w-int(w/6),50))
+                img1_rect = pygame.Rect(int(w/6),50,img1_.shape[1], img1_.shape[0])
+                img2_rect = pygame.Rect(screen.get_width()-w-int(w/6),50,img2_.shape[1], img2_.shape[0])
+                if len(self.positions1) == self.pos_i:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if img1_rect.collidepoint(mouse_pos):
+                        if pygame.mouse.get_pressed()[0]:
+                            self.positions1.append(((mouse_pos[0] - img1_rect.x)*img1_.shape[1]/w, (mouse_pos[1]-img1_rect.y)*img1_.shape[0]/h))
+                if len(self.positions2) == self.pos_i:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if img2_rect.collidepoint(mouse_pos):
+                        if pygame.mouse.get_pressed()[0]:
+                            self.positions2.append(((mouse_pos[0] - img2_rect.x)*img2_.shape[1]/w, (mouse_pos[1]-img2_rect.y)*img2_.shape[0]/h))
 
+                img1_ = cv2.resize(img1_, (int(w), int(h)))
+                img2_ = cv2.resize(img2_, (int(w), int(h)))
+                self.img1_lbl.text = f"View of Camera {self.camera_config_list[1]['name']}"
+                self.img2_lbl.text = f"View of Camera {self.camera_config_list[2]['name']}"
+                self.img1_lbl.draw(screen)
+                self.img2_lbl.draw(screen)
+                screen.blit(pygame.image.frombuffer(img1_.tobytes(), (img1_.shape[1],img1_.shape[0]), "RGB"), (int(w/6),50))
+                screen.blit(pygame.image.frombuffer(img2_.tobytes(), (img2_.shape[1],img2_.shape[0]), "RGB"), (screen.get_width()-w-int(w/6),50))
+
+                if len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1:
                     self.get_point_lbl.text = f"enter world coordinate for point {self.pos_i+1} out of 3:"
                     # self.get_point_lbl.y = h + 100
                     self.get_point_lbl.draw(screen)
@@ -673,9 +666,9 @@ class App:
 
                     screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), ((screen.get_width()//3-w//3)//2,(h+100)+(screen.get_height()-h-100-w//3)//2))
                         
-                    self.restart_btn.draw(screen)
-                    self.done_btn.draw(screen)
-                    
+                self.restart_btn.draw(screen)
+                self.done_btn.draw(screen)
+                
 
             if self.step == 11:
                 self.browse_2d_kp_btn.clickable = True
