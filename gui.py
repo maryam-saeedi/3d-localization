@@ -367,7 +367,6 @@ class App:
         self.step=1
 
     def __process(self):
-        self.real_pos.append((self.pos_w, self.pos_h, self.pos_d))
 
         transformation_matrix = find_transformation_matrix(self.primary_P_mat, self.secondary_P_mat, self.positions1, self.positions2, self.real_pos)
                         
@@ -612,7 +611,7 @@ class App:
 
 
                 if self.pos_i==3:
-                    self.restart_btn.draw(screen)
+                    # self.restart_btn.draw(screen)
                     self.done_btn.draw(screen)
                 elif len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1:
                     self.get_point_lbl.text = f"enter world coordinate for point {self.pos_i+1} out of 3:"
@@ -626,8 +625,8 @@ class App:
                     self.pos_d_inp.draw(screen,self.events)
 
                     scale = 0.05
-                    position = (130,100)
-                    canvas = np.ones((300,300,4), np.uint8)*250
+                    position = (200,200)
+                    canvas = np.ones((500,500,4), np.uint8)*250
                     if self.camera_config_list[1]["wall"] == 1:
                         self.tetha_y = -30
                         self.tetha_x = -20
