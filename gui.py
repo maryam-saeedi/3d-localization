@@ -44,8 +44,8 @@ class App:
         w = screen.get_width()
         h = screen.get_height()
         self.menu_jarvis_btn = Button("3D Calibration", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2), func=self.__open_jarvis)
-        self.menu_calibration_btn = Button("3D transformation", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+h//10+h//30), func=self.__select_option, option=1)
-        self.menu_visualization_btn = Button("3D localization", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+2*(h//10+h//30)), func=self.__select_option, option=11)
+        self.menu_calibration_btn = Button("3D Transformation", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+h//10+h//30), func=self.__select_option, option=1)
+        self.menu_visualization_btn = Button("3D Localization", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+2*(h//10+h//30)), func=self.__select_option, option=11)
 
         self.tetha_x = -20
         self.tetha_y = -30
@@ -80,9 +80,9 @@ class App:
         wall_selected_icon[5:26,5:26] = (255,0,0,200)
         self.wall4_btn_1 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125+50,4*h//10+100+50), func=self.__select_wall4, cam=1)
         self.camera_height_lbl_1 = Label(offset_x+2*12*w//125, 4*h//10+50, 100, 30, text="Y (mm):")
-        self.camera_height_inp_1 = InputBox(offset_x+2*12*w//125, 4*h//10+100, 100, 50, func=self.__set_camera_height, cam=1)
+        self.camera_height_inp_1 = InputBox(offset_x+2*12*w//125, 4*h//10+100, 100, 50, func=self.__set_camera_height, enable=False, cam=1)
         self.camera_width_lbl_1 = Label(offset_x+3*12*w//125, 4*h//10+50, 100, 30, text="X (mm):")
-        self.camera_width_inp_1 = InputBox(offset_x+3*12*w//125, 4*h//10+100, 100, 50, func=self.__set_camera_width, cam=1)
+        self.camera_width_inp_1 = InputBox(offset_x+3*12*w//125, 4*h//10+100, 100, 50, func=self.__set_camera_width, enable=False, cam=1)
         self.secondary_lbl = Label(offset_x, 7*h//10, 100, 50, text="Secondary Camera:")
         self.name_lbl_2 = Label(offset_x, 7*h//10+50, 100, 30, text="name:")
         self.name_inp_2 = InputBox(offset_x, 7*h//10+100, 100, 50,func=self.__set_camera_name, cam=2)
@@ -100,13 +100,15 @@ class App:
         wall_selected_icon[5:26,5:26] = (255,0,0,200)
         self.wall4_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125+50,7*h//10+100+50),func=self.__select_wall4,  cam=2)
         self.camera_height_lbl_2 = Label(offset_x+2*12*w//125, 7*h//10+50, 100, 30, text="Y (mm):")
-        self.camera_height_inp_2 = InputBox(offset_x+2*12*w//125, 7*h//10+100, 100, 50, func=self.__set_camera_height, cam=2)
+        self.camera_height_inp_2 = InputBox(offset_x+2*12*w//125, 7*h//10+100, 100, 50, func=self.__set_camera_height, enable=False, cam=2)
         self.camera_width_lbl_2 = Label(offset_x+3*12*w//125, 7*h//10+50, 100, 30, text="X (mm):")
-        self.camera_width_inp_2 = InputBox(offset_x+3*12*w//125, 7*h//10+100, 100, 50, func=self.__set_camera_width, cam=2)
+        self.camera_width_inp_2 = InputBox(offset_x+3*12*w//125, 7*h//10+100, 100, 50, func=self.__set_camera_width, enable=False, cam=2)
         self.primary_browse_lbl = Label(offset_x+4*12*w//125, 4*h//10+50, 100, 50, text="Camera Parameters")
         self.primary_browse_btn = Button("Browse", 100, 50, (offset_x+4*12*w//125, 4*h//10+100), func=self.__get_primary_projection_matrix)
+        self.primary_yaml_lbl = Label(offset_x+4*12*w//125, 4*h//10+100+50, 200, 30, text='')
         self.secondary_browse_lbl = Label(offset_x+4*12*w//125, 7*h//10+50, 100, 50, text="Camera Parameters")
         self.secondary_browse_btn = Button("Browse", 100, 50, (offset_x+4*12*w//125, 7*h//10+100), func=self.__get_secondary_projection_matrix)
+        self.secondary_yaml_lbl = Label(offset_x+4*12*w//125, 7*h//10+100+50, 200, 30, text='')
 
         self.next_step_btn = Button("Next Step", 300, 50, (screen.get_width()-400,screen.get_height()-150), func=self.__next_step)
 
@@ -156,12 +158,44 @@ class App:
         self.camera_config_list = {1:{}, 2:{}}
         self.camera_pos = dict()
         self.selected_wall = 0
+        self.primary_P_mat = None
+        self.secondary_P_mat = None
         self.frame1 = None
         self.frame2 = None
         self.positions1 = []
         self.positions2 = []
         self.real_pos = []
         self.pos_i = 0
+
+    def __validation(self) -> bool:
+        if self.step == 1:
+            if self.project_name == '':
+                return False
+            # primary camera info
+            if "name" not in self.camera_config_list[1]:
+                return False
+            if self.camera_width_inp_1.text == '' or self.camera_height_inp_1.text == '':
+                return False
+            # secondary camera info
+            if "name" not in self.camera_config_list[2]:
+                return False
+            if self.camera_width_inp_2.text == '' or self.camera_height_inp_2.text == '':
+                return False
+            
+        elif self.step ==2:
+            if self.primary_P_mat is None:
+                return False
+            if self.secondary_P_mat is None:
+                return False
+            
+        elif self.step == 3:
+            if self.frame1 is None:
+                return False
+            if self.frame2 is None:
+                return False
+            
+        return True
+
 
     def __set_project_name(self):
         self.project_name = self.project_name_inp.text
@@ -204,6 +238,8 @@ class App:
         self.tetha_x = -20
         self.camera_pos[cam] = (0, 0, -self.cube_depth//2)
         self.camera_config_list[cam]["wall"] = 1
+        getattr(self, f"camera_width_inp_{cam}").enable = True
+        getattr(self, f"camera_height_inp_{cam}").enable = True
 
     def __select_wall2(self, cam):
         for i in range(1,5):
@@ -213,6 +249,8 @@ class App:
         self.tetha_x = -20
         self.camera_pos[cam] = (self.cube_width//2, 0, 0)
         self.camera_config_list[cam]["wall"] = 2
+        getattr(self, f"camera_width_inp_{cam}").enable = True
+        getattr(self, f"camera_height_inp_{cam}").enable = True
 
     def __select_wall3(self, cam):
         for i in range(1,5):
@@ -222,6 +260,8 @@ class App:
         self.tetha_x = 20
         self.camera_pos[cam] = (-self.cube_width//2, 0, 0)
         self.camera_config_list[cam]["wall"] = 3
+        getattr(self, f"camera_width_inp_{cam}").enable = True
+        getattr(self, f"camera_height_inp_{cam}").enable = True
 
     def __select_wall4(self, cam):
         for i in range(1,5):
@@ -231,6 +271,8 @@ class App:
         self.tetha_x = 20
         self.camera_pos[cam] = (0, 0, self.cube_depth//2)
         self.camera_config_list[cam]["wall"] = 4
+        getattr(self, f"camera_width_inp_{cam}").enable = True
+        getattr(self, f"camera_height_inp_{cam}").enable = True
 
     def __set_camera_width(self, cam):
         camera_width = int( getattr(self,f"camera_width_inp_{cam}").text)
@@ -301,32 +343,44 @@ class App:
         self.step+=1
 
 
-    def __prompt_file(self):
+    def __prompt_file(self, filetype=("all files", "*.*")):
         """Create a Tk file dialog and cleanup when finished"""
         top = tkinter.Tk()
         top.withdraw()  # hide window
-        file_name = tkinter.filedialog.askopenfilename(parent=top)
+        file_name = tkinter.filedialog.askopenfilename(parent=top, filetypes = (filetype,))
         top.destroy()
         print(file_name)
         return file_name
     
     def __get_primary_projection_matrix(self):
-        file = self.__prompt_file()
-        P = get_projection_matrix(file)
-        self.primary_P_mat = P
+        file = self.__prompt_file(filetype=('yaml files', '*.yaml'))
+        try:
+            P = get_projection_matrix(file)
+            self.primary_P_mat = P
+            self.primary_yaml_lbl.color = (0,0,0)
+            self.primary_yaml_lbl.text = file.split('/')[-1]
+        except:
+            self.primary_yaml_lbl.color = color=(200,50,100)
+            self.primary_yaml_lbl.text = "bad file, cannot generate projection matrix"
 
     def __get_secondary_projection_matrix(self):
-        file = self.__prompt_file()
-        P = get_projection_matrix(file)
-        self.secondary_P_mat = P
+        file = self.__prompt_file(filetype=('yaml files', '*.yaml'))
+        try:
+            P = get_projection_matrix(file)
+            self.secondary_P_mat = P
+            self.secondary_yaml_lbl.color = (0,0,0)
+            self.secondary_yaml_lbl.text = file.split('/')[-1]
+        except:
+            self.secondary_yaml_lbl.color = color=(200,50,100)
+            self.secondary_yaml_lbl.text = "bad file, cannot generate projection matrix"
     
     def __load_video1(self):
-        file = self.__prompt_file()
+        file = self.__prompt_file(filetype=("videos", "*.mp4"))
         self.cap1 = cv2.VideoCapture(file)
         _, self.frame1 = self.cap1.read()
 
     def __load_video2(self):
-        file = self.__prompt_file()
+        file = self.__prompt_file(filetype=("videos", "*.mp4"))
         self.cap2 = cv2.VideoCapture(file)
         _, self.frame2 = self.cap2.read()
 
@@ -458,6 +512,8 @@ class App:
                         cv2.fillPoly(canvas, [projected_2d[4:8]], (255,255,0,200))
                         cv2.line(canvas, projected_2d[4], projected_2d[7], (0,0,0,255), 5)
                         cv2.line(canvas, projected_2d[6], projected_2d[7], (0,0,0,255), 5)
+                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[4]+projected_2d[7])//2-(20,0), 1, 1, (0,0,0,255))
                     elif self.selected_wall==2:
                         cv2.fillPoly(canvas, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,0,255,50))
                         cv2.fillPoly(canvas, [projected_2d[4:8]], (255,255,0,50))
@@ -465,6 +521,8 @@ class App:
                         cv2.fillPoly(canvas, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,0,200))
                         cv2.line(canvas, projected_2d[5], projected_2d[6], (0,0,0,255), 5)
                         cv2.line(canvas, projected_2d[6], projected_2d[2], (0,0,0,255), 5)
+                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[2])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[5]+projected_2d[6])//2-(20,0), 1, 1, (0,0,0,255))
                     elif self.selected_wall==3:
                         cv2.fillPoly(canvas, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,0,50))
                         cv2.fillPoly(canvas, [projected_2d[:4]], (255,0,0,50))
@@ -472,6 +530,8 @@ class App:
                         cv2.fillPoly(canvas, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,0,255,200))
                         cv2.line(canvas, projected_2d[0], projected_2d[3], (0,0,0,255), 5)
                         cv2.line(canvas, projected_2d[3], projected_2d[7], (0,0,0,255), 5)
+                        cv2.putText(canvas, 'X', (projected_2d[3]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[0]+projected_2d[3])//2-(20,0), 1, 1, (0,0,0,255))
                     elif self.selected_wall==4:
                         cv2.fillPoly(canvas, [projected_2d[4:8]], (255,255,0,50))
                         cv2.fillPoly(canvas, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,0,50))
@@ -479,6 +539,8 @@ class App:
                         cv2.fillPoly(canvas, [projected_2d[:4]], (255,0,0,200))
                         cv2.line(canvas, projected_2d[1], projected_2d[2], (0,0,0,255), 5)
                         cv2.line(canvas, projected_2d[2], projected_2d[3], (0,0,0,255), 5)
+                        cv2.putText(canvas, 'X', (projected_2d[2]+projected_2d[3])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[1]+projected_2d[2])//2-(20,0), 1, 1, (0,0,0,255))
 
 
                     for k, v in self.camera_config_list.items():
@@ -496,10 +558,10 @@ class App:
                     cv2.fillPoly(canvas, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,0,50))
                     cv2.fillPoly(canvas, [projected_2d[4:8]], (255,255,0,50))
 
-                x_ = np.min([x[0] for x in projected_2d[:8]]) - 5
-                w_ = np.max([x[0] for x in projected_2d[:8]]) - x_ +10
-                y_ = np.min([x[1] for x in projected_2d[:8]])-5
-                h_ = np.max([x[1] for x in projected_2d[:8]]) - y_+10
+                x_ = np.min([x[0] for x in projected_2d[:8]]) - 10
+                w_ = np.max([x[0] for x in projected_2d[:8]]) - x_ +20
+                y_ = np.min([x[1] for x in projected_2d[:8]])-10
+                h_ = np.max([x[1] for x in projected_2d[:8]]) - y_+20
                 if (w_ > h_):
                     canvas = canvas[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
                 else:
@@ -546,9 +608,12 @@ class App:
                 if self.step==2:
                     self.primary_browse_lbl.draw(screen)
                     self.primary_browse_btn.draw(screen)
+                    self.primary_yaml_lbl.draw(screen)
                     self.secondary_browse_lbl.draw(screen)
                     self.secondary_browse_btn.draw(screen)
+                    self.secondary_yaml_lbl.draw(screen)
 
+                self.next_step_btn.clickable = self.__validation()
                 self.next_step_btn.draw(screen)
                     
 
@@ -571,6 +636,9 @@ class App:
                     img2 = cv2.resize(self.frame2, (int(w),int(h)))
                     screen.blit(pygame.image.frombuffer(img2.tobytes(), (img2.shape[1],img2.shape[0]), "RGB"), (screen.get_width()-int(w)-x,150))
 
+                isValid = self.__validation()
+                self.next_frame_btn.clickable = isValid
+                self.select_btn.clickable = isValid
                 self.next_frame_btn.draw(screen)
                 self.select_btn.draw(screen)
 
@@ -745,7 +813,7 @@ if __name__ == "__main__":
     
     pygame.init()
     pygame.mixer.init()
-    pygame.display.set_caption('Calibration')
+    pygame.display.set_caption('3D Software')
     screen = pygame.display.set_mode((0, 0)) # , pygame.FULLSCREEN
     print(screen.get_height(), screen.get_width())
     mainClock = pygame.time.Clock()

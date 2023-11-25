@@ -120,7 +120,7 @@ class Button:
     
 class InputBox:
 
-    def __init__(self, x, y, w, h, func=None, color_active=(0,0,0), color_inactive=(50,50,50), text='', **args):
+    def __init__(self, x, y, w, h, func=None, enable=True, color_active=(0,0,0), color_inactive=(50,50,50), text='', **args):
         self.FONT = pygame.font.Font('tahoma.ttf', 28)
         self.rect = pygame.Rect(x, y, w, h)
         self.color_active = color_active
@@ -129,6 +129,7 @@ class InputBox:
         self.text = text
         self.txt_surface = self.FONT.render(text, True, self.color)
         self.active = False
+        self.enable = enable
         self.func = func
         self.args = args
 
@@ -168,7 +169,8 @@ class InputBox:
         screen.blit(self.FONT.render(self.text, True, self.color), (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
         # pygame.draw.rect(screen, self.color, self.rect, 2)
-        self.handle_event(events)
+        if self.enable:
+            self.handle_event(events)
    
 class Label:
 
