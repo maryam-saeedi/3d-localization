@@ -43,7 +43,7 @@ class App:
         self.step = 0
         w = screen.get_width()
         h = screen.get_height()
-        self.menu_jarvis_btn = Button("Opne JARVIS", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2), func=self.__open_jarvis)
+        self.menu_jarvis_btn = Button("3D Calibration", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2), func=self.__open_jarvis)
         self.menu_calibration_btn = Button("3D transformation", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+h//10+h//30), func=self.__select_option, option=1)
         self.menu_visualization_btn = Button("3D localization", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+2*(h//10+h//30)), func=self.__select_option, option=11)
 
@@ -138,7 +138,7 @@ class App:
         self.add_calibration_btn = Button("add calibration parameteres", w/3, 50, (7*w//12, 200), func=self.__add_calibration_file)
         self.calibraion_list_lbl = Label(7*w//12, 350, w/3, h/2)
         self.reconstruction_files = []
-        self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-200,screen.get_height()-200), func=self.__convert_2d_3d)
+        self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-150), func=self.__convert_2d_3d)
 
 
     def __open_jarvis(self):
@@ -185,13 +185,13 @@ class App:
         return projected_2d, rotation_matrix
 
     def __change_width(self):
-        self.cube_width = int(re.search(r'\d+', self.width_inp.text).group())
+        self.cube_width = int(self.width_inp.text)
 
     def __change_height(self):
-        self.cube_height = int(re.search(r'\d+', self.height_inp.text).group())
+        self.cube_height = int(self.height_inp.text)
 
     def __change_depth(self):
-        self.cube_depth = int(re.search(r'\d+', self.depth_inp.text).group())
+        self.cube_depth = int(self.depth_inp.text)
 
     def __set_camera_name(self, cam):
         self.camera_config_list[cam]["name"] = getattr(self,f"name_inp_{cam}").text
@@ -233,7 +233,7 @@ class App:
         self.camera_config_list[cam]["wall"] = 4
 
     def __set_camera_width(self, cam):
-        camera_width = int(re.search(r'\d+',  getattr(self,f"camera_width_inp_{cam}").text).group())
+        camera_width = int( getattr(self,f"camera_width_inp_{cam}").text)
         if self.selected_wall ==1 :
             self.camera_pos[cam] = (camera_width-(self.cube_width//2), self.camera_pos[cam][1], self.camera_pos[cam][2])
         elif self.selected_wall==2:
@@ -244,7 +244,7 @@ class App:
             self.camera_pos[cam] = ((self.cube_width//2)-camera_width, self.camera_pos[cam][1], self.camera_pos[cam][2])
         
     def __set_camera_height(self, cam):
-        camera_height = int(re.search(r'\d+',  getattr(self,f"camera_height_inp_{cam}").text).group())
+        camera_height = int( getattr(self,f"camera_height_inp_{cam}").text)
         self.camera_pos[cam] = (self.camera_pos[cam][0], (self.cube_height//2) - camera_height, self.camera_pos[cam][2])
 
     def __add_camera(self):
@@ -335,15 +335,15 @@ class App:
         _, self.frame2 = self.cap2.read()
 
     def __set_pos_w(self):
-        self.pos_w = int(re.search(r'\d+', self.pos_w_inp.text).group())
+        self.pos_w = int(self.pos_w_inp.text)
         self.pos_w = self.pos_w - self.camera_config_list[1]['world_pos'][0]
     
     def __set_pos_h(self):
-        self.pos_h = int(re.search(r'\d+', self.pos_h_inp.text).group())
+        self.pos_h = int(self.pos_h_inp.text)
         self.pos_h = self.pos_h - self.camera_config_list[1]['world_pos'][1]
 
     def __set_pos_d(self):
-        self.pos_d = int(re.search(r'\d+', self.pos_d_inp.text).group())
+        self.pos_d = int(self.pos_d_inp.text)
         self.pos_d = self.pos_d - self.camera_config_list[1]['world_pos'][2]
 
     def __next(self):
@@ -696,6 +696,8 @@ class App:
                 self.vis_3d_btn.draw(screen)
 
             elif self.step == 12:
+                scale = 1
+                position = (1000,3000)
                 canvas = np.ones((6000,7000,3), np.uint8)*255
                 # list_of_monkeys = [self.input_3d1_lines.pop(0), self.input_3d2_lines.pop(0)]
                 list_of_monkeys = next(self.frame_generator)
