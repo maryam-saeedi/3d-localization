@@ -822,7 +822,7 @@ if __name__ == "__main__":
     pygame.init()
     pygame.mixer.init()
     pygame.display.set_caption('3D Software')
-    screen = pygame.display.set_mode((0, 0)) # , pygame.FULLSCREEN
+    screen = pygame.display.set_mode((0, 0), (pygame.RESIZABLE), vsync=1) # , pygame.FULLSCREEN
     print(screen.get_height(), screen.get_width())
     mainClock = pygame.time.Clock()
 
