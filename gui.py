@@ -120,11 +120,11 @@ class App:
         self.img1_lbl = Label((screen.get_width()-400)//3, 0, 200, 50)
         self.img2_lbl = Label(screen.get_width()-(screen.get_width()-400)//3-200, 0, 200, 50)
         self.pos_w_lbl = Label(screen.get_width()//3,2*screen.get_height()//3+50, 2*screen.get_height()//9, 50, text="X")
-        self.pos_w_inp = InputBox(screen.get_width()//3,2*screen.get_height()//3+100, 100, 50, text="w", func=self.__set_pos_w)
+        self.pos_w_inp = InputBox(screen.get_width()//3,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_w)
         self.pos_h_lbl = Label(screen.get_width()//3+150,2*screen.get_height()//3+50, 100, 50, text="Y")
-        self.pos_h_inp = InputBox(screen.get_width()//3+150,2*screen.get_height()//3+100, 100, 50, text="h", func=self.__set_pos_h)
+        self.pos_h_inp = InputBox(screen.get_width()//3+150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_h)
         self.pos_d_lbl = Label(screen.get_width()//3+2*150,2*screen.get_height()//3+50, 100, 50, text="Z")
-        self.pos_d_inp = InputBox(screen.get_width()//3+2*150,2*screen.get_height()//3+100, 100, 50, text="d", func=self.__set_pos_d)
+        self.pos_d_inp = InputBox(screen.get_width()//3+2*150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_d)
         self.get_point_lbl = Label(screen.get_width()//3, 2*screen.get_height()//3, 200, 300)
         self.next_btn = Button("NEXT", 100,50, (2*screen.get_width()//3, 2*screen.get_height()//3+100), func=self.__next)
         self.reset_btn = Button("RESET", 100,50, (2*screen.get_width()//3+150, 2*screen.get_height()//3+100), func=self.__reset_positions)
@@ -192,6 +192,10 @@ class App:
             if self.frame1 is None:
                 return False
             if self.frame2 is None:
+                return False
+            
+        elif self.step == 4:
+            if self.pos_w_inp.text =='' or self.pos_h_inp.text == '' or self.pos_d_inp.text == '':
                 return False
             
         return True
@@ -403,6 +407,9 @@ class App:
     def __next(self):
         self.pos_i += 1
         self.real_pos.append((self.pos_w, self.pos_h, self.pos_d))
+        self.pos_w_inp.text = ''
+        self.pos_h_inp.text = ''
+        self.pos_d_inp.text = ''
     
     def __reset_positions(self):
         self.positions1 = []
@@ -744,6 +751,7 @@ class App:
 
                     screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), ((screen.get_width()//3-w//3)//2,(h+100)+(screen.get_height()-h-100-w//3)//2))
                         
+                    self.next_btn.clickable = self.__validation()
                     self.next_btn.draw(screen)
                     self.reset_btn.draw(screen)
 
