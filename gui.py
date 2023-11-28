@@ -164,6 +164,9 @@ class App:
         self.frame2 = None
         self.positions1 = []
         self.positions2 = []
+        self.pos_w = None
+        self.pos_h = None
+        self.pos_d = None
         self.real_pos = []
         self.pos_i = 0
 
@@ -279,19 +282,25 @@ class App:
         getattr(self, f"camera_height_inp_{cam}").enable = True
 
     def __set_camera_width(self, cam):
-        camera_width = int( getattr(self,f"camera_width_inp_{cam}").text)
-        if self.selected_wall ==1 :
-            self.camera_pos[cam] = (camera_width-(self.cube_width//2), self.camera_pos[cam][1], self.camera_pos[cam][2])
-        elif self.selected_wall==2:
-            self.camera_pos[cam] = (self.camera_pos[cam][0], self.camera_pos[cam][1], camera_width-(self.cube_depth//2))
-        elif self.selected_wall==3:
-            self.camera_pos[cam] = (self.camera_pos[cam][0], self.camera_pos[cam][1], (self.cube_depth//2)-camera_width)
-        elif self.selected_wall==4:
-            self.camera_pos[cam] = ((self.cube_width//2)-camera_width, self.camera_pos[cam][1], self.camera_pos[cam][2])
+        try:
+            camera_width = int( getattr(self,f"camera_width_inp_{cam}").text)
+            if self.selected_wall ==1 :
+                self.camera_pos[cam] = (camera_width-(self.cube_width//2), self.camera_pos[cam][1], self.camera_pos[cam][2])
+            elif self.selected_wall==2:
+                self.camera_pos[cam] = (self.camera_pos[cam][0], self.camera_pos[cam][1], camera_width-(self.cube_depth//2))
+            elif self.selected_wall==3:
+                self.camera_pos[cam] = (self.camera_pos[cam][0], self.camera_pos[cam][1], (self.cube_depth//2)-camera_width)
+            elif self.selected_wall==4:
+                self.camera_pos[cam] = ((self.cube_width//2)-camera_width, self.camera_pos[cam][1], self.camera_pos[cam][2])
+        except:
+            getattr(self,f"camera_width_inp_{cam}").text = getattr(self,f"camera_width_inp_{cam}").text[:-1]
         
     def __set_camera_height(self, cam):
-        camera_height = int( getattr(self,f"camera_height_inp_{cam}").text)
-        self.camera_pos[cam] = (self.camera_pos[cam][0], (self.cube_height//2) - camera_height, self.camera_pos[cam][2])
+        try:
+            camera_height = int( getattr(self,f"camera_height_inp_{cam}").text)
+            self.camera_pos[cam] = (self.camera_pos[cam][0], (self.cube_height//2) - camera_height, self.camera_pos[cam][2])
+        except:
+            getattr(self,f"camera_height_inp_{cam}").text = getattr(self,f"camera_height_inp_{cam}").text[:-1]
 
     def __add_camera(self):
         for c in [1, 2]:
@@ -393,20 +402,17 @@ class App:
         _, self.frame2 = self.cap2.read()
 
     def __set_pos_w(self):
-        self.pos_w = int(self.pos_w_inp.text)
-        self.pos_w = self.pos_w - self.camera_config_list[1]['world_pos'][0]
+        self.pos_w = self.pos_w_inp.text
     
     def __set_pos_h(self):
-        self.pos_h = int(self.pos_h_inp.text)
-        self.pos_h = self.pos_h - self.camera_config_list[1]['world_pos'][1]
+        self.pos_h = self.pos_h_inp.text
 
     def __set_pos_d(self):
-        self.pos_d = int(self.pos_d_inp.text)
-        self.pos_d = self.pos_d - self.camera_config_list[1]['world_pos'][2]
+        self.pos_d = self.pos_d_inp.text
 
     def __next(self):
         self.pos_i += 1
-        self.real_pos.append((self.pos_w, self.pos_h, self.pos_d))
+        self.real_pos.append((int(self.pos_w)-self.camera_config_list[1]['world_pos'][0], int(self.pos_h)-self.camera_config_list[1]['world_pos'][1], int(self.pos_d)-self.camera_config_list[1]['world_pos'][2]))
         self.pos_w_inp.text = ''
         self.pos_h_inp.text = ''
         self.pos_d_inp.text = ''
@@ -442,12 +448,12 @@ class App:
 
 
     def __add_kp_file(self):
-        file = self.__prompt_file()
+        file = self.__prompt_file(filetype=("2D keypoints", "*.txt"))
         self.kp_files_list.append(file)
         self.kp_files_list_lbl.text = '\n'.join(self.kp_files_list)
 
     def __add_calibration_file(self):
-        file = self.__prompt_file()
+        file = self.__prompt_file(filetype=("transformation files", "*.pickle"))
         self.reconstruction_files.append((self.kp_files_list[-2:], file))
         self.calibraion_list_lbl.text = '\n'.join([a[1] for a in self.reconstruction_files])
 
@@ -661,6 +667,8 @@ class App:
                 r = img1_.shape[0]/img1_.shape[1]
                 w = 2*screen.get_width()//5
                 h = w*r
+                img1_ = cv2.resize(img1_, (int(w), int(h)))
+                img2_ = cv2.resize(img2_, (int(w), int(h)))
 
                 img1_rect = pygame.Rect(int(w/6),50,img1_.shape[1], img1_.shape[0])
                 img2_rect = pygame.Rect(screen.get_width()-w-int(w/6),50,img2_.shape[1], img2_.shape[0])
@@ -668,15 +676,14 @@ class App:
                     mouse_pos = pygame.mouse.get_pos()
                     if img1_rect.collidepoint(mouse_pos):
                         if pygame.mouse.get_pressed()[0]:
-                            self.positions1.append(((mouse_pos[0] - img1_rect.x)*img1_.shape[1]/w, (mouse_pos[1]-img1_rect.y)*img1_.shape[0]/h))
+                            self.positions1.append(((mouse_pos[0] - img1_rect.x)*self.frame1.shape[1]/w, (mouse_pos[1]-img1_rect.y)*self.frame1.shape[0]/h))
+                
                 if len(self.positions2) == self.pos_i:
                     mouse_pos = pygame.mouse.get_pos()
                     if img2_rect.collidepoint(mouse_pos):
                         if pygame.mouse.get_pressed()[0]:
-                            self.positions2.append(((mouse_pos[0] - img2_rect.x)*img2_.shape[1]/w, (mouse_pos[1]-img2_rect.y)*img2_.shape[0]/h))
+                            self.positions2.append(((mouse_pos[0] - img2_rect.x)*self.frame2.shape[1]/w, (mouse_pos[1]-img2_rect.y)*self.frame2.shape[0]/h))
 
-                img1_ = cv2.resize(img1_, (int(w), int(h)))
-                img2_ = cv2.resize(img2_, (int(w), int(h)))
                 self.img1_lbl.text = f"View of Camera {self.camera_config_list[1]['name']}"
                 self.img2_lbl.text = f"View of Camera {self.camera_config_list[2]['name']}"
                 self.img1_lbl.draw(screen)
@@ -724,6 +731,21 @@ class App:
                         cv2.line(canvas, projected_2d[4+i], projected_2d[4+(i+1)%4], (0,0,0,255), 2)
                         cv2.line(canvas, projected_2d[i], projected_2d[i+4], (0,0,0,255), 2)
                     
+                    try:
+                        if (self.pos_w_inp.text != '') and (self.pos_h_inp.text != '') and (self.pos_d_inp.text != ''):
+                            if self.camera_config_list[1]["wall"] == 1:
+                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                            elif self.camera_config_list[1]["wall"] == 2:
+                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                            elif self.camera_config_list[1]["wall"] == 3:
+                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                            elif self.camera_config_list[1]["wall"] == 4:
+                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                            temp_pos = temp_pos[:2]
+                            temp_pos = np.int32(temp_pos*scale+position)
+                            cv2.circle(canvas, temp_pos, 5, (0,0,255,255), -1)
+                    except:
+                        pass
 
                     if self.camera_config_list[1]["wall"] == 1:
                         cv2.fillPoly(canvas, [projected_2d[4:8]], (0,255,255,150))
@@ -758,12 +780,15 @@ class App:
             if self.step == 11:
                 self.browse_2d_kp_btn.clickable = True
                 self.add_calibration_btn.clickable = False
+                self.vis_3d_btn.clickable = False
                 if len(self.kp_files_list) > 0 and len(self.kp_files_list)%2==0:
                     self.browse_2d_kp_btn.clickable = False
                     self.add_calibration_btn.clickable = True
                 if len(self.reconstruction_files) == len(self.kp_files_list)/2:
                     self.browse_2d_kp_btn.clickable = True
                     self.add_calibration_btn.clickable = False
+                    if len(self.reconstruction_files)>0:
+                        self.vis_3d_btn.clickable = True
                 self.browse_2d_kp_btn.draw(screen)
                 self.kp_files_list_lbl.draw(screen)
                 self.add_calibration_btn.draw(screen)
