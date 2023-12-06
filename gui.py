@@ -119,11 +119,11 @@ class App:
         
         self.img1_lbl = Label((screen.get_width()-400)//3, 0, 200, 50)
         self.img2_lbl = Label(screen.get_width()-(screen.get_width()-400)//3-200, 0, 200, 50)
-        self.pos_w_lbl = Label(screen.get_width()//3,2*screen.get_height()//3+50, 2*screen.get_height()//9, 50, text="X")
+        self.pos_w_lbl = Label(screen.get_width()//3,2*screen.get_height()//3+50, 2*screen.get_height()//9, 50, text="X (mm)")
         self.pos_w_inp = InputBox(screen.get_width()//3,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_w)
-        self.pos_h_lbl = Label(screen.get_width()//3+150,2*screen.get_height()//3+50, 100, 50, text="Y")
+        self.pos_h_lbl = Label(screen.get_width()//3+150,2*screen.get_height()//3+50, 100, 50, text="Y (mm)")
         self.pos_h_inp = InputBox(screen.get_width()//3+150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_h)
-        self.pos_d_lbl = Label(screen.get_width()//3+2*150,2*screen.get_height()//3+50, 100, 50, text="Z")
+        self.pos_d_lbl = Label(screen.get_width()//3+2*150,2*screen.get_height()//3+50, 100, 50, text="Z (mm)")
         self.pos_d_inp = InputBox(screen.get_width()//3+2*150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_d)
         self.get_point_lbl = Label(screen.get_width()//3, 2*screen.get_height()//3, 200, 300)
         self.next_btn = Button("NEXT", 100,50, (2*screen.get_width()//3, 2*screen.get_height()//3+100), func=self.__next)
@@ -132,14 +132,20 @@ class App:
         self.restart_btn = Button("restart", 300, 50, (screen.get_width()-750, screen.get_height()-150), func=self.__restart)
         self.done_btn = Button("done", 300, 50, (screen.get_width()-400,screen.get_height()-150),func=self.__done)
 
+        self.back_to_menu_btn = Button("Back to Menu", 300, 50, (100, screen.get_height()-150), func=self.__go_menu)
+
         self.__init()
 
         self.browse_2d_kp_btn = Button("add 2d keypoint file", w/3, 50, (w//12, 200), func=self.__add_kp_file)
+        self.browse_2d_kp_btn1 = Button("add 2d keypoint file 1", w/6-20, 50, (w//12, 200), func=self.__add_kp_file)
+        self.browse_2d_kp_btn2 = Button("add 2d keypoint file 2", w/6-20, 50, (w//12+w//6+40, 200), func=self.__add_kp_file)
         self.kp_files_list_lbl = Label(w//12, 350, w/3, h/2)
         self.kp_files_list = []
-        self.add_calibration_btn = Button("add calibration parameteres", w/3, 50, (7*w//12, 200), func=self.__add_calibration_file)
+        self.add_calibration_btn = Button("add pickle file", w/3, 50, (7*w//12, 200), func=self.__add_calibration_file)
         self.calibraion_list_lbl = Label(7*w//12, 350, w/3, h/2)
         self.reconstruction_files = []
+        self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-150), func=self.__add_pair)
+        self.add_pair = True
         self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-150), func=self.__convert_2d_3d)
 
 
@@ -203,6 +209,9 @@ class App:
             
         return True
 
+
+    def __go_menu(self):
+        self.step = 0
 
     def __set_project_name(self):
         self.project_name = self.project_name_inp.text
@@ -450,12 +459,16 @@ class App:
     def __add_kp_file(self):
         file = self.__prompt_file(filetype=("2D keypoints", "*.txt"))
         self.kp_files_list.append(file)
-        self.kp_files_list_lbl.text = '\n'.join(self.kp_files_list)
+        self.kp_files_list_lbl.text = '\n'.join([f.split('/')[-1] for f in self.kp_files_list])
 
     def __add_calibration_file(self):
         file = self.__prompt_file(filetype=("transformation files", "*.pickle"))
         self.reconstruction_files.append((self.kp_files_list[-2:], file))
-        self.calibraion_list_lbl.text = '\n'.join([a[1] for a in self.reconstruction_files])
+        self.calibraion_list_lbl.text = '\n'.join([a[1].split('/')[-1] for a in self.reconstruction_files])
+        self.add_pair = False
+
+    def __add_pair(self):
+        self.add_pair = True
 
     def __select_option(self, option):
         self.step = option
@@ -709,6 +722,7 @@ class App:
                     scale = 0.05
                     position = (200,200)
                     canvas = np.ones((500,500,4), np.uint8)*250
+                    canvas2 = np.ones((500,500,4), np.uint8)*0
                     if self.camera_config_list[1]["wall"] == 1:
                         self.tetha_y = -30
                         self.tetha_x = -20
@@ -748,52 +762,73 @@ class App:
                         pass
 
                     if self.camera_config_list[1]["wall"] == 1:
-                        cv2.fillPoly(canvas, [projected_2d[4:8]], (0,255,255,150))
+                        cv2.fillPoly(canvas2, [projected_2d[4:8]], (0,255,255,100))
+                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[4]+projected_2d[7])//2-(20,0), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[6]+projected_2d[2])//2+(0,20), 1, 1, (0,0,0,255))
                     elif self.camera_config_list[1]["wall"] == 2:
-                        cv2.fillPoly(canvas, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,255,150))
+                        cv2.fillPoly(canvas2, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,255,100))
+                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[7]+projected_2d[4])//2-(20,0), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[2]+projected_2d[6])//2+(0,20), 1, 1, (0,0,0,255))
                     elif self.camera_config_list[1]["wall"] == 3:
-                        cv2.fillPoly(canvas, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,255,255,150))
+                        cv2.fillPoly(canvas2, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,255,255,100))
+                        cv2.putText(canvas, 'X', (projected_2d[3]+projected_2d[2])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[2]+projected_2d[1])//2-(20,0), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
                     elif self.camera_config_list[1]["wall"] == 4:
-                        cv2.fillPoly(canvas, [projected_2d[:4]], (0,255,255,150))
+                        cv2.fillPoly(canvas2, [projected_2d[:4]], (0,255,255,100))
+                        cv2.putText(canvas, 'X', (projected_2d[2]+projected_2d[3])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[1]+projected_2d[2])//2-(20,0), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
                     cv2.circle(canvas, projected_2d[6], 5, (255,0,0,255))
 
                     cv2.line(canvas, projected_2d[6], projected_2d[8], (255,0,0,255), 3)
                     cv2.line(canvas, projected_2d[6], projected_2d[9], (0,255,0,255), 3)
                     cv2.line(canvas, projected_2d[6], projected_2d[10], (0,0,255,255), 3)
 
-                    x_ = np.min([x[0] for x in projected_2d]) - 5
-                    w_ = np.max([x[0] for x in projected_2d]) - x_ +10
-                    y_ = np.min([x[1] for x in projected_2d])-5
-                    h_ = np.max([x[1] for x in projected_2d]) - y_+10
+                    x_ = np.min([x[0] for x in projected_2d]) - 25
+                    w_ = np.max([x[0] for x in projected_2d]) - x_ +50
+                    y_ = np.min([x[1] for x in projected_2d])-25
+                    h_ = np.max([x[1] for x in projected_2d]) - y_+50
                     if (w_ > h_):
                         canvas = canvas[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
+                        canvas2 = canvas2[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
                     else:
                         canvas = canvas[y_:y_+h_, x_ - (h_-w_)//2: x_+w_+(h_-w_)//2]
+                        canvas2 = canvas2[y_:y_+h_, x_ - (h_-w_)//2: x_+w_+(h_-w_)//2]
                     canvas = cv2.resize(canvas, (int(w/3), int(w/3)))
+                    canvas2 = cv2.resize(canvas2, (int(w/3), int(w/3)))
 
                     screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), ((screen.get_width()//3-w//3)//2,(h+100)+(screen.get_height()-h-100-w//3)//2))
-                        
+                    screen.blit(pygame.image.frombuffer(canvas2.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), ((screen.get_width()//3-w//3)//2,(h+100)+(screen.get_height()-h-100-w//3)//2))
+
                     self.next_btn.clickable = self.__validation()
                     self.next_btn.draw(screen)
                     self.reset_btn.draw(screen)
 
             if self.step == 11:
-                self.browse_2d_kp_btn.clickable = True
+                self.browse_2d_kp_btn1.clickable = self.add_pair
+                self.browse_2d_kp_btn2.clickable = self.add_pair
                 self.add_calibration_btn.clickable = False
-                self.vis_3d_btn.clickable = False
+                self.add_pair_btn.clickable = not self.add_pair
+                self.vis_3d_btn.clickable = not self.add_pair
                 if len(self.kp_files_list) > 0 and len(self.kp_files_list)%2==0:
-                    self.browse_2d_kp_btn.clickable = False
-                    self.add_calibration_btn.clickable = True
+                    self.browse_2d_kp_btn1.clickable = False
+                    self.browse_2d_kp_btn2.clickable = False
+                    self.add_calibration_btn.clickable = self.add_pair
                 if len(self.reconstruction_files) == len(self.kp_files_list)/2:
-                    self.browse_2d_kp_btn.clickable = True
+                    self.browse_2d_kp_btn1.clickable = self.add_pair
+                    self.browse_2d_kp_btn2.clickable = self.add_pair
                     self.add_calibration_btn.clickable = False
-                    if len(self.reconstruction_files)>0:
-                        self.vis_3d_btn.clickable = True
-                self.browse_2d_kp_btn.draw(screen)
+
+                self.browse_2d_kp_btn1.draw(screen)
+                self.browse_2d_kp_btn2.draw(screen)
                 self.kp_files_list_lbl.draw(screen)
                 self.add_calibration_btn.draw(screen)
                 self.calibraion_list_lbl.draw(screen)
-
+                
+                self.add_pair_btn.draw(screen)
                 self.vis_3d_btn.draw(screen)
 
             elif self.step == 12:
@@ -835,6 +870,8 @@ class App:
                 w = r * h
                 canvas = cv2.resize(canvas, (int(w),int(h)))
                 screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGB"), (screen.get_width()-canvas.shape[1],0))
+
+                self.back_to_menu_btn.draw(screen)
 
 
             ### update the screen and limit max framerate
