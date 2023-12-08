@@ -43,7 +43,7 @@ class App:
         self.step = 0
         w = screen.get_width()
         h = screen.get_height()
-        self.menu_jarvis_btn = Button("3D Calibration", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2), func=self.__open_jarvis)
+        self.menu_jarvis_btn = Button("3D Calibration (JARVIS)", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2), func=self.__open_jarvis)
         self.menu_calibration_btn = Button("3D Transformation", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+h//10+h//30), func=self.__select_option, option=1)
         self.menu_visualization_btn = Button("3D Localization", w/3, h/10, (w//3, (h-3*h//10-2*h//30)//2+2*(h//10+h//30)), func=self.__select_option, option=11)
 
@@ -137,13 +137,17 @@ class App:
         self.__init()
 
         self.browse_2d_kp_btn = Button("add 2d keypoint file", w/3, 50, (w//12, 200), func=self.__add_kp_file)
-        self.browse_2d_kp_btn1 = Button("add 2d keypoint file 1", w/6-20, 50, (w//12, 200), func=self.__add_kp_file)
-        self.browse_2d_kp_btn2 = Button("add 2d keypoint file 2", w/6-20, 50, (w//12+w//6+40, 200), func=self.__add_kp_file)
-        self.kp_files_list_lbl = Label(w//12, 350, w/3, h/2)
+        self.browse_2d_kp_btn1 = Button("add 2d keypoint file 1", (2*w//3-270)//3, 50, (100, 200), func=self.__add_kp_file)
+        self.browse_2d_kp_btn2 = Button("add 2d keypoint file 2", (2*w//3-270)//3, 50, (120+(2*w//3-270)//3, 200), func=self.__add_kp_file)
+        self.kp_files_list_lbl = Label(100+50, 350, w/3, h/2)
         self.kp_files_list = []
-        self.add_calibration_btn = Button("add pickle file", w/3, 50, (7*w//12, 200), func=self.__add_calibration_file)
-        self.calibraion_list_lbl = Label(7*w//12, 350, w/3, h/2)
+        self.add_calibration_btn = Button("add pickle file", (2*w//3-270)//3, 50, (170+2*(2*w//3-270)//3, 200), func=self.__add_calibration_file)
+        self.calibraion_list_lbl = Label(170+2*(2*w//3-270)//3+50, 350, w/3, h/2)
         self.reconstruction_files = []
+        self.add_monkey_inp = InputBox(2*w//3+100, 200, w//3-200, 50)
+        self.add_monkey_btn = Button("add Moneky", w//3-200, 50, (2*w//3+100,270), func=self.__add_monkey)
+        self.monkey_list_lbl = Label(2*w//3+100+50, 350, w//3-200, h/2)
+        self.monkey_names = []
         self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-150), func=self.__add_pair)
         self.add_pair = True
         self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-150), func=self.__convert_2d_3d)
@@ -361,7 +365,7 @@ class App:
             kpts_3d = run_3d(input_stream1_lines, input_stream2_lines, calibration_data["primary_mat"], calibration_data["secondary_mat"], calibration_data["transformation_mat"], [np.abs(x) for x in calibration_data["primary_cam"]['world_pos']], calibration_data["primary_cam"]['flip'], classes, num_frames, conf_thresh)
             self.key_points_3d.append(kpts_3d)
 
-        self.frame_generator = combine(self.key_points_3d, monkeys=['Vin', 'Nathan'])
+        self.frame_generator = combine(self.key_points_3d, monkeys=self.monkey_names)
         self.step+=1
 
 
@@ -469,6 +473,10 @@ class App:
 
     def __add_pair(self):
         self.add_pair = True
+
+    def __add_monkey(self):
+        self.monkey_names.append(self.add_monkey_inp.text)
+        self.monkey_list_lbl.text = '\n'.join(self.monkey_names)
 
     def __select_option(self, option):
         self.step = option
@@ -827,6 +835,10 @@ class App:
                 self.kp_files_list_lbl.draw(screen)
                 self.add_calibration_btn.draw(screen)
                 self.calibraion_list_lbl.draw(screen)
+
+                self.add_monkey_inp.draw(screen, self.events)
+                self.add_monkey_btn.draw(screen)
+                self.monkey_list_lbl.draw(screen)
                 
                 self.add_pair_btn.draw(screen)
                 self.vis_3d_btn.draw(screen)
@@ -849,7 +861,7 @@ class App:
                     cv2.line(canvas, projected_2d[j], projected_2d[j+4], (200,200,200), 5)
 
 
-                for idx, mnky in enumerate(['Vin', 'Nathan']):
+                for idx, mnky in enumerate(self.monkey_names):
                     p3ds = list_of_monkeys[mnky]
                     p3ds = np.array(p3ds).reshape((17, 3))
                     projected_points = []
