@@ -799,34 +799,34 @@ class App:
 
                     if self.camera_config_list[1]["wall"] == 1:
                         cv2.fillPoly(canvas2, [projected_2d[4:8]], (0,255,255,100))
-                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[4]+projected_2d[7])//2-(20,0), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[6]+projected_2d[2])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 0.75, (255,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[4]+projected_2d[7])//2-(20,0), 2, 0.75, (0,150,50,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[6]+projected_2d[2])//2+(0,20), 2, 0.75, (0,0,255,255))
                     elif self.camera_config_list[1]["wall"] == 2:
                         cv2.fillPoly(canvas2, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,255,100))
-                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[7]+projected_2d[4])//2-(20,0), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[2]+projected_2d[6])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 1, (255,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[7]+projected_2d[4])//2-(20,0), 2, 1, (0,150,50,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[2]+projected_2d[6])//2+(0,20), 2, 1, (0,0,255,255))
                     elif self.camera_config_list[1]["wall"] == 3:
                         cv2.fillPoly(canvas2, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,255,255,100))
-                        cv2.putText(canvas, 'X', (projected_2d[3]+projected_2d[2])//2+(0,20), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[2]+projected_2d[1])//2-(20,0), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'X', (projected_2d[3]+projected_2d[2])//2+(0,20), 2, 1, (255,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[2]+projected_2d[1])//2-(20,0), 2, 1, (0,150,50,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
                     elif self.camera_config_list[1]["wall"] == 4:
                         cv2.fillPoly(canvas2, [projected_2d[:4]], (0,255,255,100))
-                        cv2.putText(canvas, 'X', (projected_2d[2]+projected_2d[3])//2+(0,20), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[1]+projected_2d[2])//2-(20,0), 1, 1, (0,0,0,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 1, 1, (0,0,0,255))
+                        cv2.putText(canvas, 'X', (projected_2d[2]+projected_2d[3])//2+(0,20), 2, 1, (255,0,0,255))
+                        cv2.putText(canvas, 'Y', (projected_2d[1]+projected_2d[2])//2-(20,0), 2, 1, (0,150,50,255))
+                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
                     cv2.circle(canvas, projected_2d[6], 5, (255,0,0,255))
 
                     cv2.line(canvas, projected_2d[6], projected_2d[8], (255,0,0,255), 3)
                     cv2.line(canvas, projected_2d[6], projected_2d[9], (0,255,0,255), 3)
                     cv2.line(canvas, projected_2d[6], projected_2d[10], (0,0,255,255), 3)
 
-                    x_ = np.min([x[0] for x in projected_2d]) - 25
-                    w_ = np.max([x[0] for x in projected_2d]) - x_ +50
-                    y_ = np.min([x[1] for x in projected_2d])-25
-                    h_ = np.max([x[1] for x in projected_2d]) - y_+50
+                    x_ = np.min([x[0] for x in projected_2d]) -30
+                    w_ = np.max([x[0] for x in projected_2d]) - x_ +60
+                    y_ = np.min([x[1] for x in projected_2d])
+                    h_ = np.max([x[1] for x in projected_2d]) - y_+30
                     if (w_ > h_):
                         canvas = canvas[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
                         canvas2 = canvas2[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
