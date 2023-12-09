@@ -151,6 +151,8 @@ class App:
         self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-100), func=self.__add_pair)
         self.add_pair = True
         self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-100), func=self.__convert_2d_3d)
+        self.wait = False
+        self.convert = False
 
 
     def __open_jarvis(self):
@@ -342,6 +344,14 @@ class App:
         self.step += 1
 
     def __convert_2d_3d(self):
+        if not self.wait:
+            self.wait = True
+            return
+        
+        if not self.convert:
+            self.convert = True
+            return
+
         classes = ['Vin', 'Nathan'] # monkeys
         conf_thresh = 0.1
         num_frames = 19635 # fps * seconds
@@ -849,6 +859,17 @@ class App:
                 self.vis_3d_btn.draw(screen)
 
                 self.back_to_menu_btn.draw(screen)
+
+                if self.wait:
+                    s = pygame.Surface((screen.get_width(),screen.get_height()))  # the size of your rect
+                    s.set_alpha(220)                # alpha level
+                    s.fill((50,50,50))           # this fills the entire surface
+                    screen.blit(s, (0,0)) 
+                    font = pygame.font.Font(None, 92)
+                    text = font.render("Please Wait ...", True, (255,255,255))
+                    r = text.get_rect()
+                    screen.blit(text, ((screen.get_width()-r.width)//2, (screen.get_height()-r.height)//2))
+                    self.__convert_2d_3d()
 
             elif self.step == 12:
                 scale = 1
