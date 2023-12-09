@@ -137,17 +137,20 @@ class App:
         self.__init()
 
         self.browse_2d_kp_btn = Button("add 2d keypoint file", w/3, 50, (w//12, 200), func=self.__add_kp_file)
-        self.browse_2d_kp_btn1 = Button("add 2d keypoint file 1", (2*w//3-270)//3, 50, (100, 200), func=self.__add_kp_file)
-        self.browse_2d_kp_btn2 = Button("add 2d keypoint file 2", (2*w//3-270)//3, 50, (120+(2*w//3-270)//3, 200), func=self.__add_kp_file)
-        self.kp_files_list_lbl = Label(100+50, 350, w/3, h/2)
+        self.browse_2d_kp_btn1 = Button("add 2d keypoint file 1", (2*w//3-270)//3, 50, (100, 100), func=self.__add_kp_file)
+        self.browse_2d_kp_btn2 = Button("add 2d keypoint file 2", (2*w//3-270)//3, 50, (120+(2*w//3-270)//3, 100), func=self.__add_kp_file)
+        self.kp_files_list_lbl = Label(100+50, 200, w/3, h/2)
         self.kp_files_list = []
-        self.add_calibration_btn = Button("add pickle file", (2*w//3-270)//3, 50, (170+2*(2*w//3-270)//3, 200), func=self.__add_calibration_file)
-        self.calibraion_list_lbl = Label(170+2*(2*w//3-270)//3+50, 350, w/3, h/2)
+        self.add_calibration_btn = Button("add pickle file", (2*w//3-270)//3, 50, (170+2*(2*w//3-270)//3, 100), func=self.__add_calibration_file)
+        self.calibraion_list_lbl = Label(170+2*(2*w//3-270)//3+50, 200, w/3, h/2)
         self.reconstruction_files = []
-        self.add_monkey_inp = InputBox(2*w//3+100, 200, w//3-200, 50)
-        self.add_monkey_btn = Button("add Moneky", w//3-200, 50, (2*w//3+100,270), func=self.__add_monkey)
-        self.monkey_list_lbl = Label(2*w//3+100+50, 350, w//3-200, h/2)
+        self.add_monkey_inp = InputBox(2*w//3+100, 100, w//3-200, 50)
+        self.add_monkey_btn = Button("add Moneky", w//3-200, 50, (2*w//3+100,170), func=self.__add_monkey)
+        self.monkey_list_lbl = Label(2*w//3+100+50, 250, w//3-200, h/2)
         self.monkey_names = []
+        self.save_path_btn = Button("select directory to save", 300, 50, (100, 3*h//5), func=self.__save_path)
+        self.save_path_lbl = Label(100, 3*h//5+50, w//2, 50)
+        self.save_path = None
         self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-100), func=self.__add_pair)
         self.add_pair = True
         self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-100), func=self.__convert_2d_3d)
@@ -343,47 +346,15 @@ class App:
             self.__add_camera()
         self.step += 1
 
-    def __convert_2d_3d(self):
-        if not self.wait:
-            self.wait = True
-            return
-        
-        if not self.convert:
-            self.convert = True
-            return
 
-        classes = ['Vin', 'Nathan'] # monkeys
-        conf_thresh = 0.1
-        num_frames = 19635 # fps * seconds
-
-        self.key_points_3d = []
-        for files in self.reconstruction_files:
-            with open(files[0][0]) as file:
-                input_stream1_lines = [line.rstrip() for line in file]
-            with open(files[0][1]) as file:
-                input_stream2_lines = [line.rstrip() for line in file]
-            input_stream1_lines.pop(0)
-            input_stream2_lines.pop(0)
-            for i in range(len(input_stream1_lines)):
-                input_stream1_lines[i] = input_stream1_lines[i].split(' ')
-            for i in range(len(input_stream2_lines)):
-                input_stream2_lines[i] = input_stream2_lines[i].split(' ')
-
-            with open(files[1], 'rb') as f:
-                calibration_data = pickle.load(f)
-
-            kpts_3d = run_3d(input_stream1_lines, input_stream2_lines, calibration_data["primary_mat"], calibration_data["secondary_mat"], calibration_data["transformation_mat"], [np.abs(x) for x in calibration_data["primary_cam"]['world_pos']], calibration_data["primary_cam"]['flip'], classes, num_frames, conf_thresh)
-            self.key_points_3d.append(kpts_3d)
-
-        self.frame_generator = combine(self.key_points_3d, monkeys=self.monkey_names)
-        self.step+=1
-
-
-    def __prompt_file(self, filetype=("all files", "*.*")):
+    def __prompt_file(self, mode="file", filetype=("all files", "*.*")):
         """Create a Tk file dialog and cleanup when finished"""
         top = tkinter.Tk()
         top.withdraw()  # hide window
-        file_name = tkinter.filedialog.askopenfilename(parent=top, filetypes = (filetype,))
+        if mode=='file':
+            file_name = tkinter.filedialog.askopenfilename(parent=top, filetypes = (filetype,))
+        else:
+            file_name = tkinter.filedialog.askdirectory(parent=top)
         top.destroy()
         print(file_name)
         return file_name
@@ -487,6 +458,50 @@ class App:
     def __add_monkey(self):
         self.monkey_names.append(self.add_monkey_inp.text)
         self.monkey_list_lbl.text = '\n'.join(self.monkey_names)
+
+    def __save_path(self):
+        file = self.__prompt_file(mode='directory')
+        self.save_path = file
+        self.save_path_lbl.text = self.save_path
+
+    def __convert_2d_3d(self):
+        if not self.wait:
+            self.wait = True
+            return
+        
+        if not self.convert:
+            self.convert = True
+            return
+
+        conf_thresh = 0.1
+        num_frames = 19635 # fps * seconds
+
+        self.key_points_3d = []
+        for files in self.reconstruction_files:
+            with open(files[0][0]) as file:
+                input_stream1_lines = [line.rstrip() for line in file]
+            with open(files[0][1]) as file:
+                input_stream2_lines = [line.rstrip() for line in file]
+            input_stream1_lines.pop(0)
+            input_stream2_lines.pop(0)
+            for i in range(len(input_stream1_lines)):
+                input_stream1_lines[i] = input_stream1_lines[i].split(' ')
+            for i in range(len(input_stream2_lines)):
+                input_stream2_lines[i] = input_stream2_lines[i].split(' ')
+
+            with open(files[1], 'rb') as f:
+                calibration_data = pickle.load(f)
+
+            kpts_3d = run_3d(input_stream1_lines, input_stream2_lines, calibration_data["primary_mat"], calibration_data["secondary_mat"], calibration_data["transformation_mat"], [np.abs(x) for x in calibration_data["primary_cam"]['world_pos']], calibration_data["primary_cam"]['flip'], self.monkey_names, num_frames, conf_thresh)
+            self.key_points_3d.append(kpts_3d)
+
+        self.frame_generator = combine(self.key_points_3d, monkeys=self.monkey_names)
+        if self.save_path is not None:
+            self.f= {}
+            for mnk in self.monkey_names:
+                self.f[mnk] = open(f'{self.save_path}/3d_keypoints_{mnk}.txt', 'w+')
+        self.step+=1
+
 
     def __select_option(self, option):
         self.step = option
@@ -854,6 +869,9 @@ class App:
                 self.add_monkey_inp.draw(screen, self.events)
                 self.add_monkey_btn.draw(screen)
                 self.monkey_list_lbl.draw(screen)
+
+                self.save_path_btn.draw(screen)
+                self.save_path_lbl.draw(screen)
                 
                 self.add_pair_btn.draw(screen)
                 self.vis_3d_btn.draw(screen)
@@ -891,6 +909,8 @@ class App:
 
                 for idx, mnky in enumerate(self.monkey_names):
                     p3ds = list_of_monkeys[mnky]
+                    if self.save_path is not None:
+                        self.f[mnky].write(' '.join(np.array(p3ds.reshape(-1), dtype=str))+'\n')
                     p3ds = np.array(p3ds).reshape((17, 3))
                     projected_points = []
                     for point in p3ds:
