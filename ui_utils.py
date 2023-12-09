@@ -121,7 +121,7 @@ class Button:
 class InputBox:
 
     def __init__(self, x, y, w, h, func=None, enable=True, color_active=(0,0,0), color_inactive=(50,50,50), text='', **args):
-        self.FONT = pygame.font.Font('tahoma.ttf', 28)
+        self.FONT = pygame.font.Font(None, 36)
         self.rect = pygame.Rect(x, y, w, h)
         self.color_active = color_active
         self.color_inactive = color_inactive
@@ -175,7 +175,8 @@ class InputBox:
                 text+='|'
             self.cursor_blink = (self.cursor_blink+1)%self.cursor_blink_interval
         pygame.draw.rect(screen, (230,230,230,230), self.rect ,border_radius = 6)
-        screen.blit(self.FONT.render(text, True, self.color), (self.rect.x+5, self.rect.y+5))
+        t = self.FONT.render(text, True, self.color)
+        screen.blit(t, (self.rect.x+10, self.rect.y+(self.rect.height - t.get_rect().height)//2))
         # Blit the rect.
         # pygame.draw.rect(screen, self.color, self.rect, 2)
         if self.enable:
