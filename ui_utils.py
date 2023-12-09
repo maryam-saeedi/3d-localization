@@ -132,6 +132,8 @@ class InputBox:
         self.enable = enable
         self.func = func
         self.args = args
+        self.cursor_blink_interval = 70
+        self.cursor_blink = 0
 
     def handle_event(self, events):
         for event in events:
@@ -167,8 +169,13 @@ class InputBox:
     def draw(self, screen, events):
         # Blit the text.
 
+        text = self.text
+        if self.active:
+            if self.cursor_blink < self.cursor_blink_interval//2:
+                text+='|'
+            self.cursor_blink = (self.cursor_blink+1)%self.cursor_blink_interval
         pygame.draw.rect(screen, (230,230,230,230), self.rect ,border_radius = 6)
-        screen.blit(self.FONT.render(self.text, True, self.color), (self.rect.x+5, self.rect.y+5))
+        screen.blit(self.FONT.render(text, True, self.color), (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
         # pygame.draw.rect(screen, self.color, self.rect, 2)
         if self.enable:
