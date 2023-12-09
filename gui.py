@@ -83,56 +83,56 @@ class App:
         self.camera_height_inp_1 = InputBox(offset_x+2*12*w//125, 4*h//10+100, 100, 50, func=self.__set_camera_height, enable=False, cam=1)
         self.camera_width_lbl_1 = Label(offset_x+3*12*w//125, 4*h//10+50, 100, 30, text="X (mm):")
         self.camera_width_inp_1 = InputBox(offset_x+3*12*w//125, 4*h//10+100, 100, 50, func=self.__set_camera_width, enable=False, cam=1)
-        self.secondary_lbl = Label(offset_x, 7*h//10, 100, 50, text="Secondary Camera:")
-        self.name_lbl_2 = Label(offset_x, 7*h//10+50, 100, 30, text="name:")
-        self.name_inp_2 = InputBox(offset_x, 7*h//10+100, 100, 50,func=self.__set_camera_name, cam=2)
-        self.wall_lbl_2 = Label(offset_x+12*w//125, 7*h//10+50, 100, 30, text="select wall:")
+        self.secondary_lbl = Label(offset_x, 6*h//10, 100, 50, text="Secondary Camera:")
+        self.name_lbl_2 = Label(offset_x, 6*h//10+50, 100, 30, text="name:")
+        self.name_inp_2 = InputBox(offset_x, 6*h//10+100, 100, 50,func=self.__set_camera_name, cam=2)
+        self.wall_lbl_2 = Label(offset_x+12*w//125, 6*h//10+50, 100, 30, text="select wall:")
         wall_icon = np.full((30,30,4), (255,255,0,50), np.uint8)
         wall_selected_icon[5:26,5:26] = (255,255,0,200)
-        self.wall1_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125,7*h//10+100),func=self.__select_wall1, cam=2)
+        self.wall1_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125,6*h//10+100),func=self.__select_wall1, cam=2)
         wall_icon = np.full((30,30,4), (0,255,0,50), np.uint8)
         wall_selected_icon[5:26,5:26] = (0,255,0,200)
-        self.wall2_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125+50,7*h//10+100),func=self.__select_wall2, cam=2)
+        self.wall2_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125+50,6*h//10+100),func=self.__select_wall2, cam=2)
         wall_icon = np.full((30,30,4), (0,0,255,50), np.uint8)
         wall_selected_icon[5:26,5:26] = (0,0,255,200)
-        self.wall3_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125,7*h//10+100+50),func=self.__select_wall3,  cam=2)
+        self.wall3_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125,6*h//10+100+50),func=self.__select_wall3,  cam=2)
         wall_icon = np.full((30,30,4), (255,0,0,50), np.uint8)
         wall_selected_icon[5:26,5:26] = (255,0,0,200)
-        self.wall4_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125+50,7*h//10+100+50),func=self.__select_wall4,  cam=2)
-        self.camera_height_lbl_2 = Label(offset_x+2*12*w//125, 7*h//10+50, 100, 30, text="Y (mm):")
-        self.camera_height_inp_2 = InputBox(offset_x+2*12*w//125, 7*h//10+100, 100, 50, func=self.__set_camera_height, enable=False, cam=2)
-        self.camera_width_lbl_2 = Label(offset_x+3*12*w//125, 7*h//10+50, 100, 30, text="X (mm):")
-        self.camera_width_inp_2 = InputBox(offset_x+3*12*w//125, 7*h//10+100, 100, 50, func=self.__set_camera_width, enable=False, cam=2)
+        self.wall4_btn_2 = ImageButton(wall_icon, wall_selected_icon, 30,30,(offset_x+12*w//125+50,6*h//10+100+50),func=self.__select_wall4,  cam=2)
+        self.camera_height_lbl_2 = Label(offset_x+2*12*w//125, 6*h//10+50, 100, 30, text="Y (mm):")
+        self.camera_height_inp_2 = InputBox(offset_x+2*12*w//125, 6*h//10+100, 100, 50, func=self.__set_camera_height, enable=False, cam=2)
+        self.camera_width_lbl_2 = Label(offset_x+3*12*w//125, 6*h//10+50, 100, 30, text="X (mm):")
+        self.camera_width_inp_2 = InputBox(offset_x+3*12*w//125, 6*h//10+100, 100, 50, func=self.__set_camera_width, enable=False, cam=2)
         self.primary_browse_lbl = Label(offset_x+4*12*w//125, 4*h//10+50, 100, 50, text="Camera Parameters")
         self.primary_browse_btn = Button("Browse", 100, 50, (offset_x+4*12*w//125, 4*h//10+100), func=self.__get_primary_projection_matrix)
         self.primary_yaml_lbl = Label(offset_x+4*12*w//125, 4*h//10+100+50, 200, 30, text='')
-        self.secondary_browse_lbl = Label(offset_x+4*12*w//125, 7*h//10+50, 100, 50, text="Camera Parameters")
-        self.secondary_browse_btn = Button("Browse", 100, 50, (offset_x+4*12*w//125, 7*h//10+100), func=self.__get_secondary_projection_matrix)
-        self.secondary_yaml_lbl = Label(offset_x+4*12*w//125, 7*h//10+100+50, 200, 30, text='')
+        self.secondary_browse_lbl = Label(offset_x+4*12*w//125, 6*h//10+50, 100, 50, text="Camera Parameters")
+        self.secondary_browse_btn = Button("Browse", 100, 50, (offset_x+4*12*w//125, 6*h//10+100), func=self.__get_secondary_projection_matrix)
+        self.secondary_yaml_lbl = Label(offset_x+4*12*w//125, 6*h//10+100+50, 200, 30, text='')
 
-        self.next_step_btn = Button("Next Step", 300, 50, (screen.get_width()-400,screen.get_height()-150), func=self.__next_step)
+        self.next_step_btn = Button("Next Step", 300, 50, (screen.get_width()-400,screen.get_height()-100), func=self.__next_step)
 
         self.video1_btn = Button("Load calibration video 1", w/4, 50, (w//8, 50), func=self.__load_video1)
         self.video2_btn = Button("Load calibration video 2", w/4, 50, (screen.get_width()-w//8-w/4, 50), func=self.__load_video2)
-        self.next_frame_btn = Button("next frame", 300, 50, (screen.get_width()-750, screen.get_height()-150), func=self.__next_frame)
-        self.select_btn = Button("select frame", 300, 50, (screen.get_width()-400, screen.get_height()-150), func=self.__next_step)
+        self.next_frame_btn = Button("next frame", 300, 50, (screen.get_width()-750, screen.get_height()-100), func=self.__next_frame)
+        self.select_btn = Button("select frame", 300, 50, (screen.get_width()-400, screen.get_height()-100), func=self.__next_step)
         
         self.img1_lbl = Label((screen.get_width()-400)//3, 0, 200, 50)
         self.img2_lbl = Label(screen.get_width()-(screen.get_width()-400)//3-200, 0, 200, 50)
-        self.pos_w_lbl = Label(screen.get_width()//3,2*screen.get_height()//3+50, 2*screen.get_height()//9, 50, text="X (mm)")
-        self.pos_w_inp = InputBox(screen.get_width()//3,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_w)
-        self.pos_h_lbl = Label(screen.get_width()//3+150,2*screen.get_height()//3+50, 100, 50, text="Y (mm)")
-        self.pos_h_inp = InputBox(screen.get_width()//3+150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_h)
-        self.pos_d_lbl = Label(screen.get_width()//3+2*150,2*screen.get_height()//3+50, 100, 50, text="Z (mm)")
-        self.pos_d_inp = InputBox(screen.get_width()//3+2*150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_d)
-        self.get_point_lbl = Label(screen.get_width()//3, 2*screen.get_height()//3, 200, 300)
-        self.next_btn = Button("NEXT", 100,50, (2*screen.get_width()//3, 2*screen.get_height()//3+100), func=self.__next)
-        self.reset_btn = Button("RESET", 100,50, (2*screen.get_width()//3+150, 2*screen.get_height()//3+100), func=self.__reset_positions)
+        self.pos_w_lbl = Label(2*w//5,2*screen.get_height()//3+50, 2*screen.get_height()//9, 50, text="X (mm)")
+        self.pos_w_inp = InputBox(2*w//5,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_w)
+        self.pos_h_lbl = Label(2*w//5+150,2*screen.get_height()//3+50, 100, 50, text="Y (mm)")
+        self.pos_h_inp = InputBox(2*w//5+150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_h)
+        self.pos_d_lbl = Label(2*w//5+2*150,2*screen.get_height()//3+50, 100, 50, text="Z (mm)")
+        self.pos_d_inp = InputBox(2*w//5+2*150,2*screen.get_height()//3+100, 100, 50, text="", func=self.__set_pos_d)
+        self.get_point_lbl = Label(2*w//5, 2*screen.get_height()//3, 200, 300)
+        self.next_btn = Button("NEXT", 100,50, (7*w//10, 2*screen.get_height()//3+100), func=self.__next)
+        self.reset_btn = Button("RESET", 100,50, (7*w//10+150, 2*screen.get_height()//3+100), func=self.__reset_positions)
 
         self.restart_btn = Button("restart", 300, 50, (screen.get_width()-750, screen.get_height()-150), func=self.__restart)
-        self.done_btn = Button("done", 300, 50, (screen.get_width()-400,screen.get_height()-150),func=self.__done)
+        self.done_btn = Button("done", 300, 50, (screen.get_width()-400,screen.get_height()-100),func=self.__done)
 
-        self.back_to_menu_btn = Button("Back to Menu", 300, 50, (100, screen.get_height()-150), func=self.__go_menu)
+        self.back_to_menu_btn = Button("Back to Menu", 200, 50, (100, screen.get_height()-100), func=self.__go_menu)
 
         self.__init()
 
@@ -148,9 +148,9 @@ class App:
         self.add_monkey_btn = Button("add Moneky", w//3-200, 50, (2*w//3+100,270), func=self.__add_monkey)
         self.monkey_list_lbl = Label(2*w//3+100+50, 350, w//3-200, h/2)
         self.monkey_names = []
-        self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-150), func=self.__add_pair)
+        self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-100), func=self.__add_pair)
         self.add_pair = True
-        self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-150), func=self.__convert_2d_3d)
+        self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-100), func=self.__convert_2d_3d)
 
 
     def __open_jarvis(self):
@@ -649,7 +649,8 @@ class App:
 
                 self.next_step_btn.clickable = self.__validation()
                 self.next_step_btn.draw(screen)
-                    
+
+                self.back_to_menu_btn.draw(screen)   
 
             elif self.step==3:
                 self.video1_btn.draw(screen)
@@ -675,6 +676,8 @@ class App:
                 self.select_btn.clickable = isValid
                 self.next_frame_btn.draw(screen)
                 self.select_btn.draw(screen)
+
+                self.back_to_menu_btn.draw(screen)
 
             elif self.step==4:
                 img1_ = self.frame1.copy()
@@ -808,12 +811,14 @@ class App:
                     canvas = cv2.resize(canvas, (int(w/3), int(w/3)))
                     canvas2 = cv2.resize(canvas2, (int(w/3), int(w/3)))
 
-                    screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), ((screen.get_width()//3-w//3)//2,(h+100)+(screen.get_height()-h-100-w//3)//2))
-                    screen.blit(pygame.image.frombuffer(canvas2.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), ((screen.get_width()//3-w//3)//2,(h+100)+(screen.get_height()-h-100-w//3)//2))
+                    screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), (screen.get_width()//5,(h+100)+(screen.get_height()-h-100-w//3)//2))
+                    screen.blit(pygame.image.frombuffer(canvas2.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), (screen.get_width()//5,(h+100)+(screen.get_height()-h-100-w//3)//2))
 
                     self.next_btn.clickable = self.__validation()
                     self.next_btn.draw(screen)
                     self.reset_btn.draw(screen)
+
+                self.back_to_menu_btn.draw(screen)
 
             if self.step == 11:
                 self.browse_2d_kp_btn1.clickable = self.add_pair
@@ -842,6 +847,8 @@ class App:
                 
                 self.add_pair_btn.draw(screen)
                 self.vis_3d_btn.draw(screen)
+
+                self.back_to_menu_btn.draw(screen)
 
             elif self.step == 12:
                 scale = 1
