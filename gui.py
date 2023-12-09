@@ -622,9 +622,17 @@ class App:
                 y_ = np.min([x[1] for x in projected_2d[:8]])-10
                 h_ = np.max([x[1] for x in projected_2d[:8]]) - y_+20
                 if (w_ > h_):
-                    canvas = canvas[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
+                    y1 = max(0, y_ - (w_-h_)//2)
+                    y2 = y_+h_+(w_-h_)//2
+                    x1 = max(0, x_)
+                    x2 = x_+w_
+                    canvas = canvas[y1:y2, x1:]
                 else:
-                    canvas = canvas[y_:y_+h_, x_ - (h_-w_)//2: x_+w_+(h_-w_)//2]
+                    y1 = max(0, y_)
+                    y2 = y_+h_
+                    x1 = max(0, x_ - (h_-w_)//2)
+                    x2 = x_+w_+(h_-w_)//2
+                    canvas = canvas[y1:y2, x1:x2]
                 canvas = cv2.resize(canvas, (int(3*screen.get_width()//10), int(3*screen.get_width()//10)))
 
                 screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), (screen.get_width()-canvas.shape[1]-50,100))
