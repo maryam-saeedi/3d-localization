@@ -131,32 +131,26 @@ class App:
 
         self.restart_btn = Button("restart", 300, 50, (screen.get_width()-750, screen.get_height()-150), func=self.__restart)
         self.done_btn = Button("done", 300, 50, (screen.get_width()-400,screen.get_height()-100),func=self.__done)
+        self.done_lbl = Label(2*h//3, screen.get_height()-200, w//2, 50)
 
         self.back_to_menu_btn = Button("Back to Menu", 200, 50, (100, screen.get_height()-100), func=self.__go_menu)
 
-        self.__init()
 
         self.browse_2d_kp_btn = Button("add 2d keypoint file", w/3, 50, (w//12, 200), func=self.__add_kp_file)
         self.browse_2d_kp_btn1 = Button("add 2d keypoint file 1", (2*w//3-270)//3, 50, (100, 100), func=self.__add_kp_file)
         self.browse_2d_kp_btn2 = Button("add 2d keypoint file 2", (2*w//3-270)//3, 50, (120+(2*w//3-270)//3, 100), func=self.__add_kp_file)
         self.kp_files_list_lbl = Label(100+50, 200, w/3, h/2)
-        self.kp_files_list = []
         self.add_calibration_btn = Button("add pickle file", (2*w//3-270)//3, 50, (170+2*(2*w//3-270)//3, 100), func=self.__add_calibration_file)
         self.calibraion_list_lbl = Label(170+2*(2*w//3-270)//3+50, 200, w/3, h/2)
-        self.reconstruction_files = []
         self.add_monkey_inp = InputBox(2*w//3+100, 100, w//3-200, 50)
         self.add_monkey_btn = Button("add Moneky", w//3-200, 50, (2*w//3+100,170), func=self.__add_monkey)
         self.monkey_list_lbl = Label(2*w//3+100+50, 250, w//3-200, h/2)
-        self.monkey_names = []
         self.save_path_btn = Button("select directory to save", 300, 50, (100, 3*h//5), func=self.__save_path)
         self.save_path_lbl = Label(100, 3*h//5+50, w//2, 50)
-        self.save_path = None
         self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-100), func=self.__add_pair)
-        self.add_pair = True
         self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-100), func=self.__convert_2d_3d)
-        self.wait = False
-        self.convert = False
 
+        self.__init()
 
     def __open_jarvis(self):
         os.system("AnnotationTool")
@@ -184,6 +178,20 @@ class App:
         self.pos_d = None
         self.real_pos = []
         self.pos_i = 0
+        self.done = 0
+
+        self.kp_files_list = []
+        self.kp_files_list_lbl.text = ''
+        self.reconstruction_files = []
+        self.calibraion_list_lbl.text = ''
+        self.monkey_names = []
+        self.monkey_list_lbl.text = ''
+        self.save_path = None
+        self.save_path_lbl.text = ''
+        self.add_pair = True
+        self.wait = False
+        self.convert = False
+
 
     def __validation(self) -> bool:
         if self.step == 1:
@@ -220,6 +228,7 @@ class App:
 
 
     def __go_menu(self):
+        self.__init()
         self.step = 0
 
     def __set_project_name(self):
@@ -418,6 +427,10 @@ class App:
         self.pos_i = 0
 
     def __done(self):
+        if self.done<100:
+            self.done+=1
+            self.done_lbl.text= f"congragulations! {self.project_name}.pickle is saving. "
+            return
         self.__process()
         self.__init()
         self.step = 0
@@ -458,6 +471,7 @@ class App:
     def __add_monkey(self):
         self.monkey_names.append(self.add_monkey_inp.text)
         self.monkey_list_lbl.text = '\n'.join(self.monkey_names)
+        self.add_monkey_inp.text = ''
 
     def __save_path(self):
         file = self.__prompt_file(mode='directory')
@@ -752,6 +766,10 @@ class App:
                 if self.pos_i==3:
                     # self.restart_btn.draw(screen)
                     self.done_btn.draw(screen)
+                    self.done_lbl.draw(screen)
+                    if self.done:
+                        self.__done()
+
                 elif len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1:
                     self.get_point_lbl.text = f"enter world coordinate for point {self.pos_i+1} out of 3:"
                     # self.get_point_lbl.y = h + 100
@@ -806,22 +824,22 @@ class App:
                         pass
 
                     if self.camera_config_list[1]["wall"] == 1:
-                        cv2.fillPoly(canvas2, [projected_2d[4:8]], (0,255,255,100))
+                        cv2.fillPoly(canvas2, [projected_2d[4:8]], (255,255,0,100))
                         cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 0.75, (255,0,0,255))
                         cv2.putText(canvas, 'Y', (projected_2d[4]+projected_2d[7])//2-(20,0), 2, 0.75, (0,150,50,255))
                         cv2.putText(canvas, 'Z', (projected_2d[6]+projected_2d[2])//2+(0,20), 2, 0.75, (0,0,255,255))
                     elif self.camera_config_list[1]["wall"] == 2:
-                        cv2.fillPoly(canvas2, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,255,100))
+                        cv2.fillPoly(canvas2, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,0,100))
                         cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 1, (255,0,0,255))
                         cv2.putText(canvas, 'Y', (projected_2d[7]+projected_2d[4])//2-(20,0), 2, 1, (0,150,50,255))
                         cv2.putText(canvas, 'Z', (projected_2d[2]+projected_2d[6])//2+(0,20), 2, 1, (0,0,255,255))
                     elif self.camera_config_list[1]["wall"] == 3:
-                        cv2.fillPoly(canvas2, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,255,255,100))
+                        cv2.fillPoly(canvas2, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,0,255,100))
                         cv2.putText(canvas, 'X', (projected_2d[3]+projected_2d[2])//2+(0,20), 2, 1, (255,0,0,255))
                         cv2.putText(canvas, 'Y', (projected_2d[2]+projected_2d[1])//2-(20,0), 2, 1, (0,150,50,255))
                         cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
                     elif self.camera_config_list[1]["wall"] == 4:
-                        cv2.fillPoly(canvas2, [projected_2d[:4]], (0,255,255,100))
+                        cv2.fillPoly(canvas2, [projected_2d[:4]], (255,0,0,100))
                         cv2.putText(canvas, 'X', (projected_2d[2]+projected_2d[3])//2+(0,20), 2, 1, (255,0,0,255))
                         cv2.putText(canvas, 'Y', (projected_2d[1]+projected_2d[2])//2-(20,0), 2, 1, (0,150,50,255))
                         cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
@@ -858,7 +876,7 @@ class App:
                 self.browse_2d_kp_btn2.clickable = self.add_pair
                 self.add_calibration_btn.clickable = False
                 self.add_pair_btn.clickable = not self.add_pair
-                self.vis_3d_btn.clickable = not self.add_pair
+                self.vis_3d_btn.clickable = not self.add_pair and (len(self.monkey_names)>0)
                 if len(self.kp_files_list) > 0 and len(self.kp_files_list)%2==0:
                     self.browse_2d_kp_btn1.clickable = False
                     self.browse_2d_kp_btn2.clickable = False
@@ -918,7 +936,7 @@ class App:
                 for idx, mnky in enumerate(self.monkey_names):
                     p3ds = list_of_monkeys[mnky]
                     if self.save_path is not None:
-                        self.f[mnky].write(' '.join(np.array(p3ds.reshape(-1), dtype=str))+'\n')
+                        self.f[mnky].write(' '.join(np.array(np.array(p3ds).reshape(-1), dtype=str))+'\n')
                     p3ds = np.array(p3ds).reshape((17, 3))
                     projected_points = []
                     for point in p3ds:
