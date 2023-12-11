@@ -365,11 +365,13 @@ class App:
         else:
             file_name = tkinter.filedialog.askdirectory(parent=top)
         top.destroy()
-        print(file_name)
+        print(file_name, type(file_name))
         return file_name
     
     def __get_primary_projection_matrix(self):
         file = self.__prompt_file(filetype=('yaml files', '*.yaml'))
+        if isinstance(file, tuple):
+            return
         try:
             P = get_projection_matrix(file)
             self.primary_P_mat = P
@@ -381,6 +383,8 @@ class App:
 
     def __get_secondary_projection_matrix(self):
         file = self.__prompt_file(filetype=('yaml files', '*.yaml'))
+        if isinstance(file, tuple):
+            return
         try:
             P = get_projection_matrix(file)
             self.secondary_P_mat = P
@@ -391,12 +395,16 @@ class App:
             self.secondary_yaml_lbl.text = "bad file, cannot generate projection matrix"
     
     def __load_video1(self):
-        file = self.__prompt_file(filetype=("videos", "*.mp4"))
+        file = self.__prompt_file(filetype=("videos", "*.mp4 *.avi *.mkv"))
+        if isinstance(file, tuple):
+            return
         self.cap1 = cv2.VideoCapture(file)
         _, self.frame1 = self.cap1.read()
 
     def __load_video2(self):
         file = self.__prompt_file(filetype=("videos", "*.mp4"))
+        if isinstance(file, tuple):
+            return
         self.cap2 = cv2.VideoCapture(file)
         _, self.frame2 = self.cap2.read()
 
@@ -448,7 +456,8 @@ class App:
             "primary_mat": self.primary_P_mat,
             "secondary_mat": self.secondary_P_mat,
             "transformation_mat": transformation_matrix,
-            "primary_cam": self.camera_config_list[1]
+            "primary_cam": self.camera_config_list[1],
+            "room_dim": [self.cube_width, self.cube_height, self.cube_depth]
         }
         with open(f"{self.project_name}.pickle", 'wb') as f:
             pickle.dump(data, f)
@@ -456,11 +465,15 @@ class App:
 
     def __add_kp_file(self):
         file = self.__prompt_file(filetype=("2D keypoints", "*.txt"))
+        if isinstance(file, tuple):
+            return
         self.kp_files_list.append(file)
         self.kp_files_list_lbl.text = '\n'.join([f.split('/')[-1] for f in self.kp_files_list])
 
     def __add_calibration_file(self):
         file = self.__prompt_file(filetype=("transformation files", "*.pickle"))
+        if isinstance(file, tuple):
+            return
         self.reconstruction_files.append((self.kp_files_list[-2:], file))
         self.calibraion_list_lbl.text = '\n'.join([a[1].split('/')[-1] for a in self.reconstruction_files])
         self.add_pair = False
@@ -475,6 +488,8 @@ class App:
 
     def __save_path(self):
         file = self.__prompt_file(mode='directory')
+        if isinstance(file, tuple):
+            return
         self.save_path = file
         self.save_path_lbl.text = self.save_path
 
@@ -509,6 +524,8 @@ class App:
             kpts_3d = run_3d(input_stream1_lines, input_stream2_lines, calibration_data["primary_mat"], calibration_data["secondary_mat"], calibration_data["transformation_mat"], [np.abs(x) for x in calibration_data["primary_cam"]['world_pos']], calibration_data["primary_cam"]['flip'], self.monkey_names, num_frames, conf_thresh)
             self.key_points_3d.append(kpts_3d)
 
+        self.cube_width, self.cube_height, self.cube_depth = calibration_data["room_dim"]
+
         self.frame_generator = combine(self.key_points_3d, monkeys=self.monkey_names)
         if self.save_path is not None:
             self.f= {}
@@ -530,8 +547,6 @@ class App:
 
         scale = 1
         position = (1000,3000)
-        cube = [[0,2400,0],[0,2400,4500],[2700,2400,4500],[2700,2400,0],[0,0,0],[0,0,4500],[2700,0,4500],[2700,0,0]]
-        cube = np.dot(cube, rotation_matrix)
         projection_matrix = [[1,0],[0,1],[0,0]]
 
         classes = ['Vin', 'Nathan']  # nathan vin
@@ -922,6 +937,8 @@ class App:
                 # list_of_monkeys = [self.input_3d1_lines.pop(0), self.input_3d2_lines.pop(0)]
                 list_of_monkeys = next(self.frame_generator)
 
+                cube = [[0,self.cube_height,0],[0,self.cube_height,self.cube_depth],[self.cube_width,self.cube_height,self.cube_depth],[self.cube_width,self.cube_height,0],[0,0,0],[0,0,self.cube_depth],[self.cube_width,0,self.cube_depth],[self.cube_width,0,0]]
+                cube = np.dot(cube, rotation_matrix)
                 projected_2d = np.dot(cube, projection_matrix)
                 projected_2d = np.int32(position+scale*projected_2d)
                 for point in projected_2d:
