@@ -503,7 +503,6 @@ class App:
             return
 
         conf_thresh = 0.1
-        num_frames = 19635 # fps * seconds
 
         self.key_points_3d = []
         for files in self.reconstruction_files:
@@ -518,11 +517,24 @@ class App:
             for i in range(len(input_stream2_lines)):
                 input_stream2_lines[i] = input_stream2_lines[i].split(' ')
 
+            num_frames = max(int(input_stream1_lines[-1][0]), int(input_stream2_lines[-1][0]))
+            print(num_frames)
+
             with open(files[1], 'rb') as f:
                 calibration_data = pickle.load(f)
 
             kpts_3d = run_3d(input_stream1_lines, input_stream2_lines, calibration_data["primary_mat"], calibration_data["secondary_mat"], calibration_data["transformation_mat"], [np.abs(x) for x in calibration_data["primary_cam"]['world_pos']], calibration_data["primary_cam"]['flip'], self.monkey_names, num_frames, conf_thresh)
             self.key_points_3d.append(kpts_3d)
+
+        for x in self.key_points_3d:
+            num_frames = max(num_frames, len(x[0]))
+        print("num frame",num_frames)
+        for i, x in enumerate(self.key_points_3d):
+            for j in range(len(self.monkey_names)):
+                print(self.key_points_3d[i][j][-2:])
+                print([np.array([[-1., -1., -1.]]*17)]*(num_frames-len(x[j])))
+                self.key_points_3d[i][j].extend([np.array([[-1, -1, -1]]*17)]*(num_frames-len(x[j])))
+                print(len(self.key_points_3d[i][j]))
 
         self.cube_width, self.cube_height, self.cube_depth = calibration_data["room_dim"]
 
