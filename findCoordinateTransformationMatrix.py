@@ -56,7 +56,7 @@ def find_transformation_matrix( P0, P1, three_points1, three_points2, three_poin
 
 
     system1 = np.array(p3ds).T
-    system1_inv = np.linalg.inv(system1) # Calculating the inverse of the matrix
+    system1_inv = np.linalg.pinv(system1) # Calculating the inverse of the matrix
     system2 = np.array(three_points_real).T
     transformation_matrix = system2 @ system1_inv
     print('transformation_matrix: ', transformation_matrix)

@@ -790,15 +790,15 @@ class App:
                 screen.blit(pygame.image.frombuffer(img2_.tobytes(), (img2_.shape[1],img2_.shape[0]), "RGB"), (screen.get_width()-w-int(w/6),50))
 
 
-                if self.pos_i==3:
+                if self.pos_i>=3 and not (len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1):
                     # self.restart_btn.draw(screen)
                     self.done_btn.draw(screen)
                     self.done_lbl.draw(screen)
                     if self.done:
                         self.__done()
 
-                elif len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1:
-                    self.get_point_lbl.text = f"enter world coordinate for point {self.pos_i+1} out of 3:"
+                if len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1:
+                    self.get_point_lbl.text = f"enter world coordinate for point {self.pos_i+1} (at least 3, more better):"
                     # self.get_point_lbl.y = h + 100
                     self.get_point_lbl.draw(screen)
                     self.pos_w_lbl.draw(screen)
