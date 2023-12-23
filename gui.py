@@ -145,6 +145,7 @@ class App:
         self.monkey_list_lbl = Label(2*w//3+100+50, 250, w//3-200, h/2)
         self.save_path_btn = Button("select directory to save", 300, 50, (100, 3*h//5), func=self.__save_path)
         self.save_path_lbl = Label(100, 3*h//5+50, w//2, 50)
+        self.save_video_btn = CheckBoxButton("Save Video", 300, 50, (100+300+50, 3*h//5), func=self.__save_video)
         self.add_pair_btn = Button("Add Pair", 300, 50, (screen.get_width()-750, screen.get_height()-100), func=self.__add_pair)
         self.vis_3d_btn = Button("Visualize 3D", 300, 50, (screen.get_width()-400,screen.get_height()-100), func=self.__convert_2d_3d)
 
@@ -488,6 +489,11 @@ class App:
         self.save_path = file
         self.save_path_lbl.text = self.save_path
 
+    def __save_video(self):
+        if self.save_video_btn.active:
+            self.video_writer = cv2.VideoWriter("output.mp4", cv2.VideoWriter_fourcc(*'MP4V'), 20, (screen.get_width(), screen.get_height()))
+        else:
+            self.video_writer = None
     def __convert_2d_3d(self):
         if not self.wait:
             self.wait = True
@@ -513,7 +519,6 @@ class App:
                 input_stream2_lines[i] = input_stream2_lines[i].split(' ')
 
             num_frames = max(int(input_stream1_lines[-1][0]), int(input_stream2_lines[-1][0]))
-            print(num_frames)
 
             with open(files[1], 'rb') as f:
                 calibration_data = pickle.load(f)
@@ -523,7 +528,6 @@ class App:
 
         for x in self.key_points_3d:
             num_frames = max(num_frames, len(x[0]))
-        print("num frame",num_frames)
         for i, x in enumerate(self.key_points_3d):
             for j in range(len(self.monkey_names)):
                 self.key_points_3d[i][j].extend([np.array([[-1, -1, -1]]*17)]*(num_frames-len(x[j])))
@@ -552,8 +556,6 @@ class App:
         scale = 1
         position = (1000,3000)
         projection_matrix = [[1,0],[0,1],[0,0]]
-
-        classes = ['Vin', 'Nathan']  # nathan vin
 
         while not done:
             ## get and handle events in this frame
@@ -917,6 +919,7 @@ class App:
 
                 self.save_path_btn.draw(screen)
                 self.save_path_lbl.draw(screen)
+                self.save_video_btn.draw(screen)
                 
                 self.add_pair_btn.draw(screen)
                 self.vis_3d_btn.draw(screen)
@@ -979,6 +982,11 @@ class App:
                 screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGB"), (screen.get_width()-canvas.shape[1],0))
 
                 self.back_to_menu_btn.draw(screen)
+
+                if self.video_writer:
+                    tmp = np.ones((screen.get_height(), screen.get_width(), 3), np.uint8)*255
+                    tmp[:canvas.shape[0], :canvas.shape[1]] = canvas
+                    self.video_writer.write(tmp)
                 # cv2.imshow('a', canvas)
                 # cv2.waitKey(0)
 

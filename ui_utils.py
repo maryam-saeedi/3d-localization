@@ -117,6 +117,51 @@ class Button:
                     self.func(**self.args)
                     self.pressed = False
 
+
+class CheckBoxButton:
+    def __init__(self,text,width,height,pos,func, clickable=True, active=False, color='#50938a', **args):
+        #Core attributes 
+        self.pressed = False
+        self.original_y_pos = pos[1]
+        self.clickable = clickable
+        self.active = active
+
+        # top rectangle 
+        self.top_rect = pygame.Rect(pos,(width,height))
+        self.active_color = color
+        self.deactive_color = '#bfb760'
+        self.disable_color = '#798483'
+
+        #text
+        self.text_surf = pygame.font.Font(None,32).render(text,True,'#ffffff')
+        self.text_rect = self.text_surf.get_rect(center = self.top_rect.center)
+
+        # function
+        self.func = func
+        self.args = args
+
+    def draw(self, screen):
+        # elevation logic 
+        self.top_rect.y = self.original_y_pos
+        self.text_rect.center = self.top_rect.center 
+
+        pygame.draw.rect(screen, (self.active_color if self.active else self.deactive_color) if self.clickable else self.disable_color , self.top_rect,border_radius = 6)
+        screen.blit(self.text_surf, self.text_rect)
+        if self.clickable:
+            self.check_click()
+
+    def check_click(self):
+        mouse_pos = pygame.mouse.get_pos()
+        if self.top_rect.collidepoint(mouse_pos):
+            # self.top_color = '#D74B4B'
+            if pygame.mouse.get_pressed()[0]:
+                self.pressed = True
+            else:
+                if self.pressed == True:
+                    self.active = not self.active
+                    self.func(**self.args)
+                    self.pressed = False
+
     
 class InputBox:
 
