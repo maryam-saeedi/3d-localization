@@ -3,18 +3,22 @@ from utils import DLT, get_projection_matrix, write_keypoints_to_disk
 import collections
 import pickle
 
-def extract_2d_pose_for_a_subject(input_stream, num_classes, frame_number, monkey_name):
+def extract_2d_pose_for_a_subject(input_stream, frame_number, monkey_name):
     pose_camera = None
-    for j in range(num_classes):
-        if len(input_stream) > j:
-            if int(input_stream[j][0]) == (frame_number + 1):
-                if str(input_stream[j][1]) == monkey_name:
-                    pose_camera = input_stream.pop(j)
-                    break
-            else:
-                break
-        else:
+
+    j=0
+    while len(input_stream) > j:
+        if int(input_stream[j][0]) < (frame_number+1):
+            input_stream.pop(j)
+            continue
+        if int(input_stream[j][0]) > (frame_number+1):
             break
+        if int(input_stream[j][0]) == (frame_number+1):
+            if str(input_stream[j][1]) == monkey_name:
+                pose_camera = input_stream.pop(j)
+                break
+        j+=1
+
     return pose_camera
 
 def check_confidence_pose(uv, conf_thresh):
@@ -51,9 +55,9 @@ def run_3d(input_stream1, input_stream2, P0, P1, transformation, coordinate_syst
         for idk, k in enumerate(classes):
             # in results txt file related to each camera, extract pose for frame i, for each monkey separately
             # first camera
-            pose_camera1 = extract_2d_pose_for_a_subject(input_stream1, num_classes, i, k)
+            pose_camera1 = extract_2d_pose_for_a_subject(input_stream1, i, k)
             # second camera
-            pose_camera2 = extract_2d_pose_for_a_subject(input_stream2, num_classes, i, k)
+            pose_camera2 = extract_2d_pose_for_a_subject(input_stream2, i, k)
 
             if (pose_camera1 is not None) and (pose_camera2 is not None):
                 p3ds = []

@@ -12,18 +12,38 @@ def combine(keypoints, monkeys):
             valid_points = [(j,len(np.where(keypoint[idx][i]!=-1.0)[0])/3) for j, keypoint in enumerate(keypoints)]
             valid_points = sorted(valid_points, key=lambda x: x[1], reverse=True)
 
-            final_row = []
-            if valid_points[0][1] == 17 and valid_points[1][1] == 17:
-                final_row.extend(np.mean([keypoint[idx][i] for keypoint in keypoints], axis=0))
-            elif valid_points[0][1] == 0 or valid_points[1][1] == 0:
-                if valid_points[0][1] != 0 :
-                    final_row = keypoints[valid_points[0][0]][idx][i]
-                else:
-                    final_row = keypoints[valid_points[1][0]][idx][i]
-                # final_row = [[-1.,-1.,-1.]]*17
+            valid_data = []
+            for j in range(len(valid_points)-1):
+                if valid_points[j+1][1] == 17:
+                    valid_data.append(keypoints[valid_points[j][0]][idx][i])
+                    continue
+                if valid_points[j+1][1] == 0:
+                    if valid_points[j][1]!=0:
+                        valid_data.append(keypoints[valid_points[j][0]][idx][i])
+                    break
+                kp1, kp2 = merge(keypoints[valid_points[j][0]][idx][i], keypoints[valid_points[j+1][0]][idx][i])
+                keypoints[valid_points[j][0]][idx][i] = kp1
+                keypoints[valid_points[j+1][0]][idx][i] = kp2
+                valid_data.append(keypoints[valid_points[j][0]][idx][i])
+            if valid_points[j+1][1] > 0:
+                valid_data.append(keypoints[valid_points[j+1][0]][idx][i])
+
+            if len(valid_data)>0:
+                final_row = np.mean(valid_data, axis=0)
             else:
-                kp1, kp2 = merge(keypoints[valid_points[0][0]][idx][i], keypoints[valid_points[1][0]][idx][i])
-                final_row.extend(np.mean([kp1, kp2], axis=0))
+                final_row = [[-1.,-1.,-1.]]*17
+            # final_row = []
+            # if valid_points[0][1] == 17 and valid_points[1][1] == 17:
+            #     final_row.extend(np.mean([keypoint[idx][i] for keypoint in keypoints], axis=0))
+            # elif valid_points[0][1] == 0 or valid_points[1][1] == 0:
+            #     if valid_points[0][1] != 0 :
+            #         final_row = keypoints[valid_points[0][0]][idx][i]
+            #     else:
+            #         final_row = keypoints[valid_points[1][0]][idx][i]
+            #     # final_row = [[-1.,-1.,-1.]]*17
+            # else:
+            #     kp1, kp2 = merge(keypoints[valid_points[0][0]][idx][i], keypoints[valid_points[1][0]][idx][i])
+            #     final_row.extend(np.mean([kp1, kp2], axis=0))
 
             # if valid_points[0][1] == 17:
             #     final_row = keypoints[valid_points[0][0]][idx][i]

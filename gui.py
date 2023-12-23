@@ -35,8 +35,6 @@ connections = [[15, 13], [13, 11], [16, 14], [14, 12],
 pose_limb_color = ['hand1', 'hand1', 'hand2', 'hand2', 'body', 'body', 'body', 'body', 'foot1', 'foot1', 'foot2',
                    'foot', 'head', 'head', 'head', 'head']
 
-
-colors = [(0,0,255), (0,0,0), 'green', 'blue']
                    
 class App:
     def __init__(self) -> None:
@@ -355,7 +353,6 @@ class App:
             self.__add_camera()
         self.step += 1
 
-
     def __prompt_file(self, mode="file", filetype=("all files", "*.*")):
         """Create a Tk file dialog and cleanup when finished"""
         top = tkinter.Tk()
@@ -365,7 +362,6 @@ class App:
         else:
             file_name = tkinter.filedialog.askdirectory(parent=top)
         top.destroy()
-        print(file_name, type(file_name))
         return file_name
     
     def __get_primary_projection_matrix(self):
@@ -462,7 +458,6 @@ class App:
         with open(f"{self.project_name}.pickle", 'wb') as f:
             pickle.dump(data, f)
 
-
     def __add_kp_file(self):
         file = self.__prompt_file(filetype=("2D keypoints", "*.txt"))
         if isinstance(file, tuple):
@@ -531,10 +526,7 @@ class App:
         print("num frame",num_frames)
         for i, x in enumerate(self.key_points_3d):
             for j in range(len(self.monkey_names)):
-                print(self.key_points_3d[i][j][-2:])
-                print([np.array([[-1., -1., -1.]]*17)]*(num_frames-len(x[j])))
                 self.key_points_3d[i][j].extend([np.array([[-1, -1, -1]]*17)]*(num_frames-len(x[j])))
-                print(len(self.key_points_3d[i][j]))
 
         self.cube_width, self.cube_height, self.cube_depth = calibration_data["room_dim"]
 
@@ -543,8 +535,8 @@ class App:
             self.f= {}
             for mnk in self.monkey_names:
                 self.f[mnk] = open(f'{self.save_path}/3d_keypoints_{mnk}.txt', 'w+')
+        self.colors = [tuple((int(np.random.randint(0,255)), int(np.random.randint(0,255)), int(np.random.randint(0,255)))) for _ in range(len(self.monkey_names))]
         self.step+=1
-
 
     def __select_option(self, option):
         self.step = option
@@ -973,12 +965,12 @@ class App:
                             pos = np.dot(point, rotation_matrix)[:2]
                             pos = np.int32(position+scale*pos)
                             projected_points.append(pos)
-                            cv2.circle(canvas, pos, 7, colors[idx], -1)    
+                            cv2.circle(canvas, pos, 7, self.colors[idx], -1)    
                         else:
                             projected_points.append([0,0])
                     for _c in connections:
                         if p3ds[_c[0], 0] != -1 and p3ds[_c[1], 0] != -1:
-                            cv2.line(canvas, projected_points[_c[0]], projected_points[_c[1]], colors[idx], 5)
+                            cv2.line(canvas, projected_points[_c[0]], projected_points[_c[1]], self.colors[idx], 5)
                 
                 r = canvas.shape[1] / canvas.shape[0]
                 h = screen.get_height()
@@ -987,6 +979,8 @@ class App:
                 screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGB"), (screen.get_width()-canvas.shape[1],0))
 
                 self.back_to_menu_btn.draw(screen)
+                # cv2.imshow('a', canvas)
+                # cv2.waitKey(0)
 
 
             ### update the screen and limit max framerate
