@@ -187,6 +187,11 @@ class App:
         self.monkey_list_lbl.text = ''
         self.save_path = None
         self.save_path_lbl.text = ''
+        try:
+            self.video_writer.close()
+        except:
+            pass
+        self.video_writer = None
         self.add_pair = True
         self.wait = False
         self.convert = False
@@ -399,7 +404,7 @@ class App:
         _, self.frame1 = self.cap1.read()
 
     def __load_video2(self):
-        file = self.__prompt_file(filetype=("videos", "*.mp4"))
+        file = self.__prompt_file(filetype=("videos", "*.mp4 *.avi *.mkv"))
         if isinstance(file, tuple):
             return
         self.cap2 = cv2.VideoCapture(file)
@@ -432,13 +437,13 @@ class App:
         self.pos_i = 0
 
     def __done(self):
-        if self.done<100:
-            self.done+=1
-            self.done_lbl.text= f"congragulations! {self.project_name}.pickle is saving. "
-            return
-        self.__process()
-        self.__init()
-        self.step = 0
+        try:
+            self.__process()
+            self.done_lbl.text= f"Congragulations! {self.project_name}.pickle was saved."
+            self.done = True
+        except:
+            self.done_lbl.text= f"An error occured."
+            self.done_lbl.color = (200,50,100)
 
     def __restart(self):
         self.__process()
@@ -491,7 +496,7 @@ class App:
 
     def __save_video(self):
         if self.save_video_btn.active:
-            self.video_writer = cv2.VideoWriter("output.mp4", cv2.VideoWriter_fourcc(*'MP4V'), 20, (screen.get_width(), screen.get_height()))
+            self.video_writer = cv2.VideoWriter("output.mp4", cv2.VideoWriter_fourcc(*'mp4v'), 20, (screen.get_width(), screen.get_height()))
         else:
             self.video_writer = None
     def __convert_2d_3d(self):
@@ -783,112 +788,112 @@ class App:
                 screen.blit(pygame.image.frombuffer(img1_.tobytes(), (img1_.shape[1],img1_.shape[0]), "RGB"), (int(w/6),50))
                 screen.blit(pygame.image.frombuffer(img2_.tobytes(), (img2_.shape[1],img2_.shape[0]), "RGB"), (screen.get_width()-w-int(w/6),50))
 
-
-                if self.pos_i>=3 and not (len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1):
-                    # self.restart_btn.draw(screen)
-                    self.done_btn.draw(screen)
+                if self.done:
                     self.done_lbl.draw(screen)
-                    if self.done:
-                        self.__done()
+                else:
+                    if len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1:
+                        self.get_point_lbl.text = f"enter world coordinate for point {self.pos_i+1} (at least 3, more better):"
+                        # self.get_point_lbl.y = h + 100
+                        self.get_point_lbl.draw(screen)
+                        self.pos_w_lbl.draw(screen)
+                        self.pos_w_inp.draw(screen,self.events)
+                        self.pos_h_lbl.draw(screen)
+                        self.pos_h_inp.draw(screen,self.events)
+                        self.pos_d_lbl.draw(screen)
+                        self.pos_d_inp.draw(screen,self.events)
 
-                if len(self.positions1)==self.pos_i+1 and len(self.positions2)==self.pos_i+1:
-                    self.get_point_lbl.text = f"enter world coordinate for point {self.pos_i+1} (at least 3, more better):"
-                    # self.get_point_lbl.y = h + 100
-                    self.get_point_lbl.draw(screen)
-                    self.pos_w_lbl.draw(screen)
-                    self.pos_w_inp.draw(screen,self.events)
-                    self.pos_h_lbl.draw(screen)
-                    self.pos_h_inp.draw(screen,self.events)
-                    self.pos_d_lbl.draw(screen)
-                    self.pos_d_inp.draw(screen,self.events)
+                        scale = 0.05
+                        position = (200,200)
+                        canvas = np.ones((500,500,4), np.uint8)*250
+                        canvas2 = np.ones((500,500,4), np.uint8)*0
+                        if self.camera_config_list[1]["wall"] == 1:
+                            self.tetha_y = -30
+                            self.tetha_x = -20
+                        elif self.camera_config_list[1]["wall"] == 2:
+                            self.tetha_y = - 60
+                            self.tetha_x = -20
+                        elif self.camera_config_list[1]["wall"] == 3:
+                            self.tetha_y = 90+ 60
+                            self.tetha_x = 20
+                        elif self.camera_config_list[1]["wall"] == 4:
+                            self.tetha_y = 180 - 30
+                            self.tetha_x = 20
+                        projected_2d, mat_r = self.__render_cube()
+                        projected_2d = np.int32(position+scale*projected_2d)
+                        for point in projected_2d[:8]:
+                            cv2.circle(canvas, point, 3, (0,0,0,255), -1)
+                        
+                        for i in range(4):
+                            cv2.line(canvas, projected_2d[i], projected_2d[(i+1)%4], (0,0,0,255), 2)
+                            cv2.line(canvas, projected_2d[4+i], projected_2d[4+(i+1)%4], (0,0,0,255), 2)
+                            cv2.line(canvas, projected_2d[i], projected_2d[i+4], (0,0,0,255), 2)
+                        
+                        try:
+                            if (self.pos_w_inp.text != '') and (self.pos_h_inp.text != '') and (self.pos_d_inp.text != ''):
+                                if self.camera_config_list[1]["wall"] == 1:
+                                    temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                                elif self.camera_config_list[1]["wall"] == 2:
+                                    temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                                elif self.camera_config_list[1]["wall"] == 3:
+                                    temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                                elif self.camera_config_list[1]["wall"] == 4:
+                                    temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
+                                temp_pos = temp_pos[:2]
+                                temp_pos = np.int32(temp_pos*scale+position)
+                                cv2.circle(canvas, temp_pos, 5, (0,0,255,255), -1)
+                        except:
+                            pass
 
-                    scale = 0.05
-                    position = (200,200)
-                    canvas = np.ones((500,500,4), np.uint8)*250
-                    canvas2 = np.ones((500,500,4), np.uint8)*0
-                    if self.camera_config_list[1]["wall"] == 1:
-                        self.tetha_y = -30
-                        self.tetha_x = -20
-                    elif self.camera_config_list[1]["wall"] == 2:
-                        self.tetha_y = - 60
-                        self.tetha_x = -20
-                    elif self.camera_config_list[1]["wall"] == 3:
-                        self.tetha_y = 90+ 60
-                        self.tetha_x = 20
-                    elif self.camera_config_list[1]["wall"] == 4:
-                        self.tetha_y = 180 - 30
-                        self.tetha_x = 20
-                    projected_2d, mat_r = self.__render_cube()
-                    projected_2d = np.int32(position+scale*projected_2d)
-                    for point in projected_2d[:8]:
-                        cv2.circle(canvas, point, 3, (0,0,0,255), -1)
-                    
-                    for i in range(4):
-                        cv2.line(canvas, projected_2d[i], projected_2d[(i+1)%4], (0,0,0,255), 2)
-                        cv2.line(canvas, projected_2d[4+i], projected_2d[4+(i+1)%4], (0,0,0,255), 2)
-                        cv2.line(canvas, projected_2d[i], projected_2d[i+4], (0,0,0,255), 2)
-                    
-                    try:
-                        if (self.pos_w_inp.text != '') and (self.pos_h_inp.text != '') and (self.pos_d_inp.text != ''):
-                            if self.camera_config_list[1]["wall"] == 1:
-                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
-                            elif self.camera_config_list[1]["wall"] == 2:
-                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
-                            elif self.camera_config_list[1]["wall"] == 3:
-                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
-                            elif self.camera_config_list[1]["wall"] == 4:
-                                temp_pos = np.dot([int(self.pos_w)+self.cube_width//2, int(self.pos_h)+self.cube_height//2, int(self.pos_d)-self.cube_depth//2], mat_r)
-                            temp_pos = temp_pos[:2]
-                            temp_pos = np.int32(temp_pos*scale+position)
-                            cv2.circle(canvas, temp_pos, 5, (0,0,255,255), -1)
-                    except:
-                        pass
+                        if self.camera_config_list[1]["wall"] == 1:
+                            cv2.fillPoly(canvas2, [projected_2d[4:8]], (255,255,0,100))
+                            cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 0.75, (255,0,0,255))
+                            cv2.putText(canvas, 'Y', (projected_2d[4]+projected_2d[7])//2-(20,0), 2, 0.75, (0,150,50,255))
+                            cv2.putText(canvas, 'Z', (projected_2d[6]+projected_2d[2])//2+(0,20), 2, 0.75, (0,0,255,255))
+                        elif self.camera_config_list[1]["wall"] == 2:
+                            cv2.fillPoly(canvas2, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,0,100))
+                            cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 1, (255,0,0,255))
+                            cv2.putText(canvas, 'Y', (projected_2d[7]+projected_2d[4])//2-(20,0), 2, 1, (0,150,50,255))
+                            cv2.putText(canvas, 'Z', (projected_2d[2]+projected_2d[6])//2+(0,20), 2, 1, (0,0,255,255))
+                        elif self.camera_config_list[1]["wall"] == 3:
+                            cv2.fillPoly(canvas2, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,0,255,100))
+                            cv2.putText(canvas, 'X', (projected_2d[3]+projected_2d[2])//2+(0,20), 2, 1, (255,0,0,255))
+                            cv2.putText(canvas, 'Y', (projected_2d[2]+projected_2d[1])//2-(20,0), 2, 1, (0,150,50,255))
+                            cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
+                        elif self.camera_config_list[1]["wall"] == 4:
+                            cv2.fillPoly(canvas2, [projected_2d[:4]], (255,0,0,100))
+                            cv2.putText(canvas, 'X', (projected_2d[2]+projected_2d[3])//2+(0,20), 2, 1, (255,0,0,255))
+                            cv2.putText(canvas, 'Y', (projected_2d[1]+projected_2d[2])//2-(20,0), 2, 1, (0,150,50,255))
+                            cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
+                        cv2.circle(canvas, projected_2d[6], 5, (255,0,0,255))
 
-                    if self.camera_config_list[1]["wall"] == 1:
-                        cv2.fillPoly(canvas2, [projected_2d[4:8]], (255,255,0,100))
-                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 0.75, (255,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[4]+projected_2d[7])//2-(20,0), 2, 0.75, (0,150,50,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[6]+projected_2d[2])//2+(0,20), 2, 0.75, (0,0,255,255))
-                    elif self.camera_config_list[1]["wall"] == 2:
-                        cv2.fillPoly(canvas2, [np.array([projected_2d[1],projected_2d[2],projected_2d[6],projected_2d[5]])], (0,255,0,100))
-                        cv2.putText(canvas, 'X', (projected_2d[6]+projected_2d[7])//2+(0,20), 2, 1, (255,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[7]+projected_2d[4])//2-(20,0), 2, 1, (0,150,50,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[2]+projected_2d[6])//2+(0,20), 2, 1, (0,0,255,255))
-                    elif self.camera_config_list[1]["wall"] == 3:
-                        cv2.fillPoly(canvas2, [np.array([projected_2d[0],projected_2d[3],projected_2d[7],projected_2d[4]])], (0,0,255,100))
-                        cv2.putText(canvas, 'X', (projected_2d[3]+projected_2d[2])//2+(0,20), 2, 1, (255,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[2]+projected_2d[1])//2-(20,0), 2, 1, (0,150,50,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
-                    elif self.camera_config_list[1]["wall"] == 4:
-                        cv2.fillPoly(canvas2, [projected_2d[:4]], (255,0,0,100))
-                        cv2.putText(canvas, 'X', (projected_2d[2]+projected_2d[3])//2+(0,20), 2, 1, (255,0,0,255))
-                        cv2.putText(canvas, 'Y', (projected_2d[1]+projected_2d[2])//2-(20,0), 2, 1, (0,150,50,255))
-                        cv2.putText(canvas, 'Z', (projected_2d[3]+projected_2d[7])//2+(0,20), 2, 1, (0,0,255,255))
-                    cv2.circle(canvas, projected_2d[6], 5, (255,0,0,255))
+                        cv2.line(canvas, projected_2d[6], projected_2d[8], (255,0,0,255), 3)
+                        cv2.line(canvas, projected_2d[6], projected_2d[9], (0,255,0,255), 3)
+                        cv2.line(canvas, projected_2d[6], projected_2d[10], (0,0,255,255), 3)
 
-                    cv2.line(canvas, projected_2d[6], projected_2d[8], (255,0,0,255), 3)
-                    cv2.line(canvas, projected_2d[6], projected_2d[9], (0,255,0,255), 3)
-                    cv2.line(canvas, projected_2d[6], projected_2d[10], (0,0,255,255), 3)
+                        x_ = np.min([x[0] for x in projected_2d]) -30
+                        w_ = np.max([x[0] for x in projected_2d]) - x_ +60
+                        y_ = np.min([x[1] for x in projected_2d])
+                        h_ = np.max([x[1] for x in projected_2d]) - y_+30
+                        if (w_ > h_):
+                            canvas = canvas[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
+                            canvas2 = canvas2[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
+                        else:
+                            canvas = canvas[y_:y_+h_, x_ - (h_-w_)//2: x_+w_+(h_-w_)//2]
+                            canvas2 = canvas2[y_:y_+h_, x_ - (h_-w_)//2: x_+w_+(h_-w_)//2]
+                        canvas = cv2.resize(canvas, (int(w/3), int(w/3)))
+                        canvas2 = cv2.resize(canvas2, (int(w/3), int(w/3)))
 
-                    x_ = np.min([x[0] for x in projected_2d]) -30
-                    w_ = np.max([x[0] for x in projected_2d]) - x_ +60
-                    y_ = np.min([x[1] for x in projected_2d])
-                    h_ = np.max([x[1] for x in projected_2d]) - y_+30
-                    if (w_ > h_):
-                        canvas = canvas[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
-                        canvas2 = canvas2[y_ - (w_-h_)//2:y_+h_+(w_-h_)//2, x_:x_+w_]
+                        screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), (screen.get_width()//5,(h+100)+(screen.get_height()-h-100-w//3)//2))
+                        screen.blit(pygame.image.frombuffer(canvas2.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), (screen.get_width()//5,(h+100)+(screen.get_height()-h-100-w//3)//2))
+
+                        self.next_btn.clickable = self.__validation()
+                        self.next_btn.draw(screen)
+                        self.reset_btn.draw(screen)
                     else:
-                        canvas = canvas[y_:y_+h_, x_ - (h_-w_)//2: x_+w_+(h_-w_)//2]
-                        canvas2 = canvas2[y_:y_+h_, x_ - (h_-w_)//2: x_+w_+(h_-w_)//2]
-                    canvas = cv2.resize(canvas, (int(w/3), int(w/3)))
-                    canvas2 = cv2.resize(canvas2, (int(w/3), int(w/3)))
-
-                    screen.blit(pygame.image.frombuffer(canvas.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), (screen.get_width()//5,(h+100)+(screen.get_height()-h-100-w//3)//2))
-                    screen.blit(pygame.image.frombuffer(canvas2.tobytes(), (canvas.shape[1],canvas.shape[0]), "RGBA"), (screen.get_width()//5,(h+100)+(screen.get_height()-h-100-w//3)//2))
-
-                    self.next_btn.clickable = self.__validation()
-                    self.next_btn.draw(screen)
-                    self.reset_btn.draw(screen)
+                        self.get_point_lbl.text = f"Point number {self.pos_i+1} (select identity point on two frames):"
+                        self.get_point_lbl.draw(screen)
+                        if self.pos_i>=3:
+                            self.done_btn.draw(screen)
 
                 self.back_to_menu_btn.draw(screen)
 
@@ -983,7 +988,7 @@ class App:
 
                 self.back_to_menu_btn.draw(screen)
 
-                if self.video_writer:
+                if self.video_writer is not None:
                     tmp = np.ones((screen.get_height(), screen.get_width(), 3), np.uint8)*255
                     tmp[:canvas.shape[0], :canvas.shape[1]] = canvas
                     self.video_writer.write(tmp)
